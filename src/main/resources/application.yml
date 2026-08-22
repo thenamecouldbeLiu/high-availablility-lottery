@@ -1,0 +1,86 @@
+spring:
+  application:
+    name: lottory
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+  datasource:
+    url: "${DB_URL:jdbc:postgresql://localhost:5432/lottory}"
+    username: "${DB_USERNAME:lottory}"
+    password: "${DB_PASSWORD:lottory}"
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:20}
+      minimum-idle: ${DB_POOL_MIN_IDLE:5}
+      connection-timeout: ${DB_CONNECTION_TIMEOUT_MS:30000}
+      idle-timeout: ${DB_IDLE_TIMEOUT_MS:600000}
+      max-lifetime: ${DB_MAX_LIFETIME_MS:1800000}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+  rabbitmq:
+    host: "${MQ_HOST:localhost}"
+    port: ${MQ_PORT:5672}
+    username: "${MQ_USERNAME:guest}"
+    password: "${MQ_PASSWORD:guest}"
+    virtual-host: "${MQ_VHOST:/}"
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    listener:
+      simple:
+        acknowledge-mode: manual
+        prefetch: ${MQ_PREFETCH:20}
+        concurrency: ${MQ_CONCURRENCY:3}
+        max-concurrency: ${MQ_MAX_CONCURRENCY:10}
+        retry:
+          enabled: true
+          max-attempts: ${MQ_RETRY_MAX_ATTEMPTS:3}
+          initial-interval: "${MQ_RETRY_INITIAL_INTERVAL:1s}"
+  data:
+    redis:
+      host: "${REDIS_HOST:localhost}"
+      port: ${REDIS_PORT:6379}
+      username: "${REDIS_USERNAME:}"
+      password: "${REDIS_PASSWORD:}"
+      database: ${REDIS_DATABASE:0}
+      connect-timeout: "${REDIS_CONNECT_TIMEOUT:2s}"
+      timeout: "${REDIS_COMMAND_TIMEOUT:2s}"
+      lettuce:
+        pool:
+          enabled: true
+          max-active: ${REDIS_POOL_MAX_ACTIVE:32}
+          max-idle: ${REDIS_POOL_MAX_IDLE:16}
+          min-idle: ${REDIS_POOL_MIN_IDLE:4}
+          max-wait: "${REDIS_POOL_MAX_WAIT:2s}"
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+
+app:
+  database:
+    transaction-timeout-seconds: ${DB_TRANSACTION_TIMEOUT_SECONDS:10}
+  lottery:
+    draw:
+      max-batch-draws: ${DRAW_MAX_BATCH_DRAWS:100}
+      probability-scale: ${DRAW_PROBABILITY_SCALE:10000000}
+      idempotency-ttl: "${DRAW_IDEMPOTENCY_TTL:24h}"
+      result-ttl: "${DRAW_RESULT_TTL:24h}"
+  messaging:
+    lottery:
+      exchange: "${LOTTERY_EXCHANGE:lottery.exchange}"
+      queue: "${LOTTERY_QUEUE:lottery.draw.queue}"
+      routing-key: "${LOTTERY_ROUTING_KEY:lottery.draw.requested}"
+      dead-letter-exchange: "${LOTTERY_DLX:lottery.dlx}"
+      dead-letter-queue: "${LOTTERY_DLQ:lottery.draw.dlq}"
+      dead-letter-routing-key: "${LOTTERY_DLQ_ROUTING_KEY:lottery.draw.dead}"
+      outbox-poll-interval-ms: ${LOTTERY_OUTBOX_POLL_INTERVAL_MS:1000}

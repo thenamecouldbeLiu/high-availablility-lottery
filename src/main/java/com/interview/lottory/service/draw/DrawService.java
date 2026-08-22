@@ -6,6 +6,7 @@ import com.interview.lottory.enums.PrizeType;
 import com.interview.lottory.infra.exception.ErrorCode;
 import com.interview.lottory.infra.exception.InterviewException;
 import com.interview.lottory.infra.Constants;
+import com.interview.lottory.infra.config.DrawProperties;
 import com.interview.lottory.repository.*;
 import com.interview.lottory.service.draw.dto.*;
 import com.interview.lottory.service.draw.mapper.DrawEntityMapper;
@@ -20,7 +21,6 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -28,11 +28,6 @@ import java.util.concurrent.ThreadLocalRandom;
 @Service
 @RequiredArgsConstructor
 public class DrawService {
-    private static final int MAX_BATCH_DRAWS = 100;
-    private static final long PROBABILITY_SCALE = 10_000_000L;
-    private static final Duration IDEMPOTENCY_TTL = Duration.ofHours(24);
-    private static final Duration RESULT_TTL = Duration.ofHours(24);
-
     private final LotteryCampaignRepository campaignRepository;
     private final LotteryPrizeRepository prizeRepository;
     private final LotteryUserQuotaRepository quotaRepository;
@@ -42,6 +37,7 @@ public class DrawService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final TransactionTemplate transactionTemplate;
     private final ObjectMapper objectMapper;
+    private final DrawProperties properties;
 
     public DrawResultBo draw(DrawCommandBo command) {
         validateCommand(command);
@@ -111,10 +107,11 @@ public class DrawService {
     }
 
     private DrawPrizeBo selectPrize(List<DrawPrizeBo> prizes) {
-        long ticket = ThreadLocalRandom.current().nextLong(PROBABILITY_SCALE);
+        long probabilityScale = properties.probabilityScale();
+        long ticket = ThreadLocalRandom.current().nextLong(probabilityScale);
         long cumulative = 0;
         for (DrawPrizeBo prize : prizes) {
-            cumulative += prize.probability().multiply(BigDecimal.valueOf(PROBABILITY_SCALE)).longValueExact();
+            cumulative += prize.probability().multiply(BigDecimal.valueOf(probabilityScale)).longValueExact();
             if (ticket < cumulative) {
                 return prize;
             }
@@ -141,7 +138,7 @@ public class DrawService {
     private boolean acquireRequest(String key) {
         try {
             return Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(
-                    key, Constants.ProcessStatus.PROCESSING, IDEMPOTENCY_TTL));
+                    key, Constants.ProcessStatus.PROCESSING, properties.idempotencyTtl()));
         } catch (RedisConnectionFailureException ignored) {
             return true;
         }
@@ -149,7 +146,8 @@ public class DrawService {
 
     private void cacheResult(String requestId, DrawResultBo result) {
         try {
-            redisTemplate.opsForValue().set(Constants.RedisKey.RESULT_PREFIX + requestId, result, RESULT_TTL);
+            redisTemplate.opsForValue().set(
+                    Constants.RedisKey.RESULT_PREFIX + requestId, result, properties.resultTtl());
         } catch (RedisConnectionFailureException ignored) {
             // PostgreSQL remains the authoritative idempotency store.
         }
@@ -167,9 +165,9 @@ public class DrawService {
         if (command.requestId() == null || command.requestId().isBlank()
                 || command.userId() == null || command.userId().isBlank()
                 || command.campaignId() == null || command.drawCount() < 1
-                || command.drawCount() > MAX_BATCH_DRAWS) {
+                || command.drawCount() > properties.maxBatchDraws()) {
             throw new InterviewException(ErrorCode.INVALID_REQUEST, Constants.MessageKey.INVALID_DRAW_COUNT,
-                    1, MAX_BATCH_DRAWS);
+                    1, properties.maxBatchDraws());
         }
     }
 

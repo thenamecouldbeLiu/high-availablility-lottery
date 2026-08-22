@@ -11,6 +11,7 @@ import com.interview.lottory.repository.LotteryPrizeRepository;
 import com.interview.lottory.service.campaign.dto.*;
 import com.interview.lottory.service.campaign.mapper.CampaignEntityMapper;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +21,6 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class CampaignService {
-    private static final BigDecimal TOTAL_PROBABILITY = new BigDecimal("1.0000000");
     private final LotteryCampaignRepository campaignRepository;
     private final LotteryPrizeRepository prizeRepository;
     private final CampaignEntityMapper mapper;
@@ -57,19 +57,24 @@ public class CampaignService {
         LotteryPrize entity = prizeRepository.findByIdAndCampaignIdAndDeletedFalse(prizeId, campaignId)
                 .orElseThrow(() -> new InterviewException(ErrorCode.PRIZE_NOT_FOUND));
         PrizeConfigBo current = mapper.toBo(entity);
+        PrizeConfigBo adjusted = checkRemainAndGetCalculatedPrize(command, current);
+        mapper.updatePrize(adjusted, entity);
+        LotteryPrize saved = prizeRepository.save(entity);
+        validateIfActive(mapper.toBo(campaign));
+        return mapper.toBo(saved);
+    }
+
+    private PrizeConfigBo checkRemainAndGetCalculatedPrize(PrizeConfigBo command,
+                                                                           PrizeConfigBo current) {
         long awarded = current.totalStock() - current.remainingStock();
         if (command.prizeType() == PrizeType.PRIZE && command.totalStock() < awarded) {
             throw new InterviewException(ErrorCode.INVALID_REQUEST,
                     Constants.MessageKey.STOCK_BELOW_AWARDED, awarded);
         }
-        PrizeConfigBo adjusted = new PrizeConfigBo(command.id(), command.campaignId(), command.prizeCode(),
+        return new PrizeConfigBo(command.id(), command.campaignId(), command.prizeCode(),
                 command.name(), command.prizeType(), command.probability(), command.totalStock(),
                 command.prizeType() == PrizeType.NO_PRIZE ? 0 : command.totalStock() - awarded,
                 command.displayOrder(), command.enabled());
-        mapper.updatePrize(adjusted, entity);
-        LotteryPrize saved = prizeRepository.save(entity);
-        validateIfActive(mapper.toBo(campaign));
-        return mapper.toBo(saved);
     }
 
     @Transactional
@@ -128,7 +133,7 @@ public class CampaignService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         boolean stockValid = prizes.stream().filter(p -> p.prizeType() == PrizeType.PRIZE)
                 .allMatch(p -> p.totalStock() > 0);
-        if (actualPrizes != 3 || noPrize != 1 || total.compareTo(TOTAL_PROBABILITY) != 0 || !stockValid) {
+        if (actualPrizes != 3 || noPrize != 1 || total.compareTo(Constants.TOTAL_PROBABILITY) != 0 || !stockValid) {
             throw new InterviewException(ErrorCode.INVALID_PRIZE_CONFIGURATION);
         }
     }

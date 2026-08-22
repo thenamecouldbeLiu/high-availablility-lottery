@@ -1,8 +1,11 @@
 package com.interview.lottory.infra;
 
+import java.math.BigDecimal;
+
 public final class Constants {
     private Constants() {
     }
+    public static final BigDecimal TOTAL_PROBABILITY = new BigDecimal("1.0000000");
 
     public static final class RedisKey {
         public static final String IDEMPOTENCY_PREFIX = "lottery:idempotency:";
