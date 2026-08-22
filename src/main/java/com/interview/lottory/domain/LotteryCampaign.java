@@ -41,7 +41,7 @@ public class LotteryCampaign implements Persistable<Long> {
         }
     }
 
-    @Column(name = "campaign_code", nullable = false, length = 64, unique = true)
+    @Column(name = "campaign_code", nullable = false, length = 64)
     private String campaignCode;
 
     @Column(nullable = false, length = 128)
@@ -64,6 +64,12 @@ public class LotteryCampaign implements Persistable<Long> {
     @Setter(AccessLevel.NONE)
     @Column(nullable = false)
     private long version;
+
+    @Column(nullable = false)
+    private boolean deleted;
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
 
     @Setter(AccessLevel.NONE)
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)

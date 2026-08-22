@@ -71,7 +71,7 @@ public class DrawService {
     }
 
     private DrawResultBo executeDraw(DrawCommandBo command) {
-        DrawCampaignBo campaign = campaignRepository.findById(command.campaignId())
+        DrawCampaignBo campaign = campaignRepository.findByIdAndDeletedFalse(command.campaignId())
                 .map(mapper::toCampaignBo)
                 .orElseThrow(() -> new InterviewException(ErrorCode.CAMPAIGN_NOT_FOUND));
         validateCampaign(campaign);
@@ -87,7 +87,8 @@ public class DrawService {
         }
 
         List<DrawPrizeBo> prizes = mapper.toPrizeBos(
-                prizeRepository.findByCampaignIdAndEnabledTrueOrderByDisplayOrderAsc(command.campaignId()));
+                prizeRepository.findByCampaignIdAndEnabledTrueAndDeletedFalseOrderByDisplayOrderAsc(
+                        command.campaignId()));
         DrawPrizeBo noPrize = prizes.stream().filter(p -> p.prizeType() == PrizeType.NO_PRIZE)
                 .findFirst().orElseThrow(() -> new InterviewException(ErrorCode.INVALID_PRIZE_CONFIGURATION));
 

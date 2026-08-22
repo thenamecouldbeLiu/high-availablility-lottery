@@ -61,4 +61,10 @@ public class CampaignController {
     public void deletePrize(@PathVariable Long campaignId, @PathVariable Long prizeId) {
         service.deletePrize(campaignId, prizeId);
     }
+
+    @DeleteMapping("/{campaignId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteCampaign(@PathVariable Long campaignId) {
+        service.deleteCampaign(campaignId);
+    }
 }

@@ -10,15 +10,18 @@ CREATE TABLE lottery_campaign (
     starts_at TIMESTAMP WITH TIME ZONE NOT NULL,
     ends_at TIMESTAMP WITH TIME ZONE NOT NULL,
     version BIGINT NOT NULL DEFAULT 0,
+    deleted BOOLEAN NOT NULL DEFAULT FALSE,
+    deleted_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT uk_lottery_campaign_code UNIQUE (campaign_code),
     CONSTRAINT ck_campaign_status CHECK (status IN ('DRAFT', 'ACTIVE', 'PAUSED', 'ENDED')),
     CONSTRAINT ck_campaign_draw_limit CHECK (max_draws_per_user > 0),
     CONSTRAINT ck_campaign_period CHECK (ends_at > starts_at)
 );
 
 CREATE INDEX idx_campaign_status_period ON lottery_campaign (status, starts_at, ends_at);
+CREATE UNIQUE INDEX uk_lottery_campaign_code_active
+    ON lottery_campaign (campaign_code) WHERE deleted = FALSE;
 
 CREATE TABLE lottery_prize (
     id BIGINT PRIMARY KEY,
@@ -32,10 +35,11 @@ CREATE TABLE lottery_prize (
     display_order INTEGER NOT NULL DEFAULT 0,
     enabled BOOLEAN NOT NULL DEFAULT TRUE,
     version BIGINT NOT NULL DEFAULT 0,
+    deleted BOOLEAN NOT NULL DEFAULT FALSE,
+    deleted_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_prize_campaign FOREIGN KEY (campaign_id) REFERENCES lottery_campaign (id),
-    CONSTRAINT uk_prize_campaign_code UNIQUE (campaign_id, prize_code),
     CONSTRAINT ck_prize_type CHECK (prize_type IN ('PRIZE', 'NO_PRIZE')),
     CONSTRAINT ck_prize_probability CHECK (probability >= 0 AND probability <= 1),
     CONSTRAINT ck_prize_stock CHECK (total_stock >= 0 AND remaining_stock >= 0 AND remaining_stock <= total_stock),
@@ -43,8 +47,10 @@ CREATE TABLE lottery_prize (
 );
 
 CREATE INDEX idx_prize_campaign_enabled ON lottery_prize (campaign_id, enabled, display_order);
+CREATE UNIQUE INDEX uk_prize_campaign_code_active
+    ON lottery_prize (campaign_id, prize_code) WHERE deleted = FALSE;
 CREATE UNIQUE INDEX uk_prize_one_no_prize_per_campaign
-    ON lottery_prize (campaign_id) WHERE prize_type = 'NO_PRIZE';
+    ON lottery_prize (campaign_id) WHERE prize_type = 'NO_PRIZE' AND deleted = FALSE;
 
 CREATE TABLE lottery_event (
     event_id UUID PRIMARY KEY,

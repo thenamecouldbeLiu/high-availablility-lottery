@@ -75,6 +75,12 @@ public class LotteryPrize implements Persistable<Long> {
     @Column(nullable = false)
     private long version;
 
+    @Column(nullable = false)
+    private boolean deleted;
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
     @Setter(AccessLevel.NONE)
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private Instant createdAt;

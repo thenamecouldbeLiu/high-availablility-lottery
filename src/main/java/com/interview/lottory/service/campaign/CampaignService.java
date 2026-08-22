@@ -27,7 +27,7 @@ public class CampaignService {
 
     @Transactional
     public CampaignBo create(CreateCampaignBo command) {
-        if (campaignRepository.existsByCampaignCode(command.campaignCode())) {
+        if (campaignRepository.existsByCampaignCodeAndDeletedFalse(command.campaignCode())) {
             throw new InterviewException(ErrorCode.DUPLICATE_REQUEST,
                     Constants.MessageKey.CAMPAIGN_CODE_EXISTS, command.campaignCode());
         }
@@ -54,8 +54,7 @@ public class CampaignService {
     @Transactional
     public PrizeConfigBo updatePrize(Long campaignId, Long prizeId, PrizeConfigBo command) {
         LotteryCampaign campaign = getCampaignEntity(campaignId);
-        LotteryPrize entity = prizeRepository.findById(prizeId)
-                .filter(prize -> mapper.toBo(prize).campaignId().equals(campaignId))
+        LotteryPrize entity = prizeRepository.findByIdAndCampaignIdAndDeletedFalse(prizeId, campaignId)
                 .orElseThrow(() -> new InterviewException(ErrorCode.PRIZE_NOT_FOUND));
         PrizeConfigBo current = mapper.toBo(entity);
         long awarded = current.totalStock() - current.remainingStock();
@@ -94,12 +93,19 @@ public class CampaignService {
     @Transactional
     public void deletePrize(Long campaignId, Long prizeId) {
         LotteryCampaign campaign = getCampaignEntity(campaignId);
-        LotteryPrize prize = prizeRepository.findById(prizeId)
-                .filter(item -> mapper.toBo(item).campaignId().equals(campaignId))
-                .orElseThrow(() -> new InterviewException(ErrorCode.PRIZE_NOT_FOUND));
-        prizeRepository.delete(prize);
-        prizeRepository.flush();
+        if (prizeRepository.softDeleteByIdAndCampaignId(prizeId, campaignId) != 1) {
+            throw new InterviewException(ErrorCode.PRIZE_NOT_FOUND);
+        }
         validateIfActive(mapper.toBo(campaign));
+    }
+
+    @Transactional
+    public void deleteCampaign(Long campaignId) {
+        getCampaignEntity(campaignId);
+        prizeRepository.softDeleteAllByCampaignId(campaignId);
+        if (campaignRepository.softDeleteById(campaignId) != 1) {
+            throw new InterviewException(ErrorCode.CAMPAIGN_NOT_FOUND);
+        }
     }
 
     @Transactional(readOnly = true)
@@ -115,7 +121,7 @@ public class CampaignService {
 
     private void validatePrizeConfiguration(Long campaignId) {
         List<PrizeConfigBo> prizes = mapper.toPrizeBos(
-                prizeRepository.findByCampaignIdAndEnabledTrueOrderByDisplayOrderAsc(campaignId));
+                prizeRepository.findByCampaignIdAndEnabledTrueAndDeletedFalseOrderByDisplayOrderAsc(campaignId));
         long actualPrizes = prizes.stream().filter(p -> p.prizeType() == PrizeType.PRIZE).count();
         long noPrize = prizes.stream().filter(p -> p.prizeType() == PrizeType.NO_PRIZE).count();
         BigDecimal total = prizes.stream().map(PrizeConfigBo::probability)
@@ -131,11 +137,12 @@ public class CampaignService {
         CampaignBo base = mapper.toBo(entity);
         return new CampaignBo(base.id(), base.campaignCode(), base.name(), base.status(),
                 base.maxDrawsPerUser(), base.startsAt(), base.endsAt(),
-                mapper.toPrizeBos(prizeRepository.findByCampaignIdOrderByDisplayOrderAsc(entity.getId())));
+                mapper.toPrizeBos(prizeRepository.findByCampaignIdAndDeletedFalseOrderByDisplayOrderAsc(
+                        base.id())));
     }
 
     private LotteryCampaign getCampaignEntity(Long id) {
-        return campaignRepository.findById(id)
+        return campaignRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new InterviewException(ErrorCode.CAMPAIGN_NOT_FOUND));
     }
 

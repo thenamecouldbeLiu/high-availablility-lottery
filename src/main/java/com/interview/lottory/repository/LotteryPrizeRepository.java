@@ -10,9 +10,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface LotteryPrizeRepository extends JpaRepository<LotteryPrize, Long> {
-    List<LotteryPrize> findByCampaignIdAndEnabledTrueOrderByDisplayOrderAsc(Long campaignId);
-    List<LotteryPrize> findByCampaignIdOrderByDisplayOrderAsc(Long campaignId);
-    Optional<LotteryPrize> findByCampaignIdAndPrizeCode(Long campaignId, String prizeCode);
+    List<LotteryPrize> findByCampaignIdAndEnabledTrueAndDeletedFalseOrderByDisplayOrderAsc(Long campaignId);
+    List<LotteryPrize> findByCampaignIdAndDeletedFalseOrderByDisplayOrderAsc(Long campaignId);
+    Optional<LotteryPrize> findByIdAndCampaignIdAndDeletedFalse(Long id, Long campaignId);
+    Optional<LotteryPrize> findByCampaignIdAndPrizeCodeAndDeletedFalse(Long campaignId, String prizeCode);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
@@ -20,9 +21,36 @@ public interface LotteryPrizeRepository extends JpaRepository<LotteryPrize, Long
                set p.remainingStock = p.remainingStock - :quantity,
                    p.version = p.version + 1
              where p.id = :prizeId
-               and p.prizeType = com.interview.lottory.domain.PrizeType.PRIZE
+               and p.prizeType = com.interview.lottory.enums.PrizeType.PRIZE
                and p.enabled = true
+               and p.deleted = false
                and p.remainingStock >= :quantity
             """)
     int deductStockIfAvailable(@Param("prizeId") Long prizeId, @Param("quantity") long quantity);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            update LotteryPrize p
+               set p.deleted = true,
+                   p.deletedAt = CURRENT_TIMESTAMP,
+                   p.enabled = false,
+                   p.version = p.version + 1
+             where p.id = :prizeId
+               and p.campaignId = :campaignId
+               and p.deleted = false
+            """)
+    int softDeleteByIdAndCampaignId(@Param("prizeId") Long prizeId,
+                                    @Param("campaignId") Long campaignId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            update LotteryPrize p
+               set p.deleted = true,
+                   p.deletedAt = CURRENT_TIMESTAMP,
+                   p.enabled = false,
+                   p.version = p.version + 1
+             where p.campaignId = :campaignId
+               and p.deleted = false
+            """)
+    int softDeleteAllByCampaignId(@Param("campaignId") Long campaignId);
 }
