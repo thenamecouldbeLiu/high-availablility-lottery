@@ -62,6 +62,7 @@ CREATE TABLE lottery_event (
     status VARCHAR(20) NOT NULL,
     payload JSONB NOT NULL,
     result_payload JSONB,
+    failure_code VARCHAR(64),
     retry_count INTEGER NOT NULL DEFAULT 0,
     next_retry_at TIMESTAMP WITH TIME ZONE,
     published_at TIMESTAMP WITH TIME ZONE,
@@ -73,11 +74,12 @@ CREATE TABLE lottery_event (
     CONSTRAINT uk_lottery_event_request UNIQUE (request_id),
     CONSTRAINT ck_event_draw_count CHECK (draw_count > 0),
     CONSTRAINT ck_event_retry_count CHECK (retry_count >= 0),
-    CONSTRAINT ck_event_status CHECK (status IN ('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'PUBLISHED'))
+    CONSTRAINT ck_event_status CHECK (status IN ('PENDING', 'DISPATCHING', 'PUBLISHED', 'PROCESSING', 'COMPLETED', 'FAILED'))
 );
 
 CREATE INDEX idx_event_outbox_polling ON lottery_event (status, next_retry_at, created_at);
 CREATE INDEX idx_event_campaign_user ON lottery_event (campaign_id, user_id, created_at);
+CREATE INDEX idx_event_user_created ON lottery_event (user_id, created_at DESC);
 
 CREATE TABLE lottery_user_quota (
     campaign_id BIGINT NOT NULL,

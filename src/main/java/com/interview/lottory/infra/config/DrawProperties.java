@@ -13,6 +13,8 @@ public record DrawProperties(
         @Min(1) int maxBatchDraws,
         @Min(1) long probabilityScale,
         @NotNull Duration idempotencyTtl,
-        @NotNull Duration resultTtl
+        @NotNull Duration resultTtl,
+        @NotNull Duration sseTimeout,
+        @NotNull Duration ssePollInterval
 ) {
 }

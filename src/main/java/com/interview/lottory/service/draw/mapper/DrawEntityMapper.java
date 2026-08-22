@@ -15,14 +15,20 @@ public interface DrawEntityMapper {
     DrawCampaignBo toCampaignBo(LotteryCampaign entity);
     DrawPrizeBo toPrizeBo(LotteryPrize entity);
     List<DrawPrizeBo> toPrizeBos(List<LotteryPrize> entities);
+    @Mapping(target = "sequence", source = "drawSequence")
+    DrawItemBo toItemBo(LotteryDraw entity);
+    List<DrawItemBo> toItemBos(List<LotteryDraw> entities);
     LotteryEventMessageBo toMessageBo(LotteryEvent entity);
+
+    @Mapping(target = "status", source = "status")
+    DrawAcceptedBo toAcceptedBo(LotteryEvent entity);
 
     @Mapping(target = "eventId", source = "eventId")
     @Mapping(target = "requestId", source = "command.requestId")
     @Mapping(target = "campaignId", source = "command.campaignId")
     @Mapping(target = "userId", source = "command.userId")
     @Mapping(target = "drawCount", source = "command.drawCount")
-    @Mapping(target = "eventType", constant = Constants.EventType.LOTTERY_DRAW_COMPLETED)
+    @Mapping(target = "eventType", constant = Constants.EventType.LOTTERY_DRAW_REQUESTED)
     @Mapping(target = "status", constant = "PENDING")
     @Mapping(target = "payload", source = "payload")
     LotteryEvent toEvent(DrawCommandBo command, UUID eventId, String payload);
@@ -39,8 +45,14 @@ public interface DrawEntityMapper {
 
     default void attachResult(LotteryEvent event, String resultPayload) {
         event.setResultPayload(resultPayload);
-        event.setStatus(LotteryEventStatus.PENDING);
-        event.setNextRetryAt(Instant.now());
+        event.setStatus(LotteryEventStatus.COMPLETED);
+        event.setProcessedAt(Instant.now());
+    }
+
+    default void markFailed(LotteryEvent event, String failureCode) {
+        event.setStatus(LotteryEventStatus.FAILED);
+        event.setFailureCode(failureCode);
+        event.setProcessedAt(Instant.now());
     }
 
     default void markPublished(LotteryEvent event) {

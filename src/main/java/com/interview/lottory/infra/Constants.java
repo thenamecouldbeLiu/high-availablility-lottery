@@ -15,15 +15,8 @@ public final class Constants {
         }
     }
 
-    public static final class ProcessStatus {
-        public static final String PROCESSING = "PROCESSING";
-
-        private ProcessStatus() {
-        }
-    }
-
     public static final class EventType {
-        public static final String LOTTERY_DRAW_COMPLETED = "LOTTERY_DRAW_COMPLETED";
+        public static final String LOTTERY_DRAW_REQUESTED = "LOTTERY_DRAW_REQUESTED";
 
         private EventType() {
         }

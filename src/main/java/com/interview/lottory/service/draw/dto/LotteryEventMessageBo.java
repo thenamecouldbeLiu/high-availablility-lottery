@@ -4,5 +4,5 @@ import java.util.UUID;
 
 public record LotteryEventMessageBo(UUID eventId, String requestId, Long campaignId,
                                     String userId, String eventType, int drawCount,
-                                    String resultPayload) {
+                                    String payload, String resultPayload) {
 }

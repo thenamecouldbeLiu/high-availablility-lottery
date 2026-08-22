@@ -33,6 +33,11 @@ public class LotteryOutboxPublisher {
 
     private void publish(LotteryEvent event) {
         var message = mapper.toMessageBo(event);
+        boolean claimed = transactionTemplate.execute(status ->
+                eventRepository.claimForPublishing(message.eventId()) == 1);
+        if (!claimed) {
+            return;
+        }
         try {
             CorrelationData correlation = new CorrelationData(message.eventId().toString());
             rabbitTemplate.convertAndSend(properties.exchange(), properties.routingKey(),
@@ -41,11 +46,8 @@ public class LotteryOutboxPublisher {
             if (!confirm.ack() || correlation.getReturned() != null) {
                 throw new IllegalStateException("RabbitMQ did not confirm event " + message.eventId());
             }
-            transactionTemplate.executeWithoutResult(status -> eventRepository.findById(message.eventId())
-                    .ifPresent(current -> {
-                        mapper.markPublished(current);
-                        eventRepository.save(current);
-                    }));
+            transactionTemplate.executeWithoutResult(status ->
+                    eventRepository.markPublishedIfDispatching(message.eventId()));
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             markFailed(event);
@@ -56,10 +58,8 @@ public class LotteryOutboxPublisher {
 
     private void markFailed(LotteryEvent event) {
         var message = mapper.toMessageBo(event);
-        transactionTemplate.executeWithoutResult(status -> eventRepository.findById(message.eventId())
-                .ifPresent(current -> {
-                    mapper.markPublishFailed(current);
-                    eventRepository.save(current);
-                }));
+        long delaySeconds = Math.min(300, 1L << Math.min(8, event.getRetryCount()));
+        transactionTemplate.executeWithoutResult(status ->
+                eventRepository.reschedulePublishing(message.eventId(), Instant.now().plusSeconds(delaySeconds)));
     }
 }

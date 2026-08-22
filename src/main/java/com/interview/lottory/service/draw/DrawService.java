@@ -11,14 +11,17 @@ import com.interview.lottory.repository.*;
 import com.interview.lottory.service.draw.dto.*;
 import com.interview.lottory.service.draw.mapper.DrawEntityMapper;
 import com.interview.lottory.util.IdGeneratorUtil;
+import com.interview.lottory.util.JsonUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -35,46 +38,57 @@ public class DrawService {
     private final LotteryDrawRepository drawRepository;
     private final DrawEntityMapper mapper;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final StringRedisTemplate stringRedisTemplate;
+    private final RedisScript<Long> releaseIdempotencyScript;
     private final TransactionTemplate transactionTemplate;
-    private final ObjectMapper objectMapper;
+    private final JsonUtil jsonUtil;
     private final DrawProperties properties;
 
-    public DrawResultBo draw(DrawCommandBo command) {
+    public DrawAcceptedBo submit(DrawCommandBo command) {
         validateCommand(command);
-        DrawResultBo cached = readCachedResult(command.requestId());
-        if (cached != null) {
-            return cached;
-        }
-
         String lockKey = Constants.RedisKey.IDEMPOTENCY_PREFIX + command.requestId();
-        boolean acquired = acquireRequest(lockKey);
+        String lockToken = IdGeneratorUtil.nextUuidString();
+        boolean acquired = acquireRequest(lockKey, lockToken);
         if (!acquired) {
-            return findExisting(command.requestId()).orElseThrow(
+            return findExistingRequest(command.requestId()).orElseThrow(
                     () -> new InterviewException(ErrorCode.DUPLICATE_REQUEST));
         }
 
         try {
-            DrawResultBo result = transactionTemplate.execute(status -> executeDraw(command));
-            cacheResult(command.requestId(), result);
-            return result;
+            return transactionTemplate.execute(status -> createRequest(command));
         } catch (DataIntegrityViolationException exception) {
-            return findExisting(command.requestId()).orElseThrow(
+            return findExistingRequest(command.requestId()).orElseThrow(
                     () -> new InterviewException(ErrorCode.DUPLICATE_REQUEST));
         } catch (RuntimeException exception) {
-            releaseRequest(lockKey);
+            releaseRequest(lockKey, lockToken);
             throw exception;
         }
     }
 
-    private DrawResultBo executeDraw(DrawCommandBo command) {
+    private DrawAcceptedBo createRequest(DrawCommandBo command) {
         DrawCampaignBo campaign = campaignRepository.findByIdAndDeletedFalse(command.campaignId())
                 .map(mapper::toCampaignBo)
                 .orElseThrow(() -> new InterviewException(ErrorCode.CAMPAIGN_NOT_FOUND));
         validateCampaign(campaign);
 
         UUID eventId = IdGeneratorUtil.nextUuid();
-        LotteryEvent event = mapper.toEvent(command, eventId, writeJson(command));
-        eventRepository.saveAndFlush(event);
+        LotteryEvent event = mapper.toEvent(command, eventId, jsonUtil.writeJson(command));
+        return mapper.toAcceptedBo(eventRepository.saveAndFlush(event));
+    }
+
+    @Transactional
+    public DrawResultBo process(UUID eventId) {
+        if (eventRepository.claimForProcessing(eventId) != 1) {
+            return null;
+        }
+        LotteryEvent event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new InterviewException(ErrorCode.INVALID_REQUEST));
+        DrawCommandBo command = jsonUtil.readJson(event.getPayload(), DrawCommandBo.class);
+
+        DrawCampaignBo campaign = campaignRepository.findByIdAndDeletedFalse(command.campaignId())
+                .map(mapper::toCampaignBo)
+                .orElseThrow(() -> new InterviewException(ErrorCode.CAMPAIGN_NOT_FOUND));
+        validateCampaign(campaign);
 
         quotaRepository.createIfAbsent(command.campaignId(), command.userId());
         if (quotaRepository.consumeIfAvailable(command.campaignId(), command.userId(),
@@ -101,9 +115,17 @@ public class DrawService {
         DrawResultBo result = new DrawResultBo(eventId, command.requestId(), command.campaignId(),
                 command.userId(), command.drawCount(), List.copyOf(items));
         drawRepository.saveAll(items.stream().map(item -> mapper.toDraw(item, command, eventId)).toList());
-        mapper.attachResult(event, writeJson(result));
+        mapper.attachResult(event, jsonUtil.writeJson(result));
         eventRepository.save(event);
         return result;
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void markFailed(UUID eventId, ErrorCode errorCode) {
+        eventRepository.findById(eventId).ifPresent(event -> {
+            mapper.markFailed(event, errorCode.getCode());
+            eventRepository.save(event);
+        });
     }
 
     private DrawPrizeBo selectPrize(List<DrawPrizeBo> prizes) {
@@ -119,43 +141,32 @@ public class DrawService {
         throw new InterviewException(ErrorCode.INVALID_PRIZE_CONFIGURATION);
     }
 
-    private Optional<DrawResultBo> findExisting(String requestId) {
+    private Optional<DrawAcceptedBo> findExistingRequest(String requestId) {
         return eventRepository.findByRequestId(requestId)
-                .map(mapper::toMessageBo)
-                .filter(event -> event.resultPayload() != null)
-                .map(event -> readJson(event.resultPayload(), DrawResultBo.class));
+                .map(mapper::toAcceptedBo);
     }
 
-    private DrawResultBo readCachedResult(String requestId) {
+    private boolean acquireRequest(String key, String token) {
         try {
-            Object value = redisTemplate.opsForValue().get(Constants.RedisKey.RESULT_PREFIX + requestId);
-            return value instanceof DrawResultBo result ? result : null;
-        } catch (RedisConnectionFailureException ignored) {
-            return null;
-        }
-    }
-
-    private boolean acquireRequest(String key) {
-        try {
-            return Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(
-                    key, Constants.ProcessStatus.PROCESSING, properties.idempotencyTtl()));
+            return Boolean.TRUE.equals(stringRedisTemplate.opsForValue().setIfAbsent(
+                    key, token, properties.idempotencyTtl()));
         } catch (RedisConnectionFailureException ignored) {
             return true;
         }
     }
 
-    private void cacheResult(String requestId, DrawResultBo result) {
+    public void cacheResult(DrawResultBo result) {
         try {
             redisTemplate.opsForValue().set(
-                    Constants.RedisKey.RESULT_PREFIX + requestId, result, properties.resultTtl());
+                    Constants.RedisKey.RESULT_PREFIX + result.requestId(), result, properties.resultTtl());
         } catch (RedisConnectionFailureException ignored) {
             // PostgreSQL remains the authoritative idempotency store.
         }
     }
 
-    private void releaseRequest(String key) {
+    private void releaseRequest(String key, String token) {
         try {
-            redisTemplate.delete(key);
+            stringRedisTemplate.execute(releaseIdempotencyScript, List.of(key), token);
         } catch (RedisConnectionFailureException ignored) {
             // The key expires automatically; DB uniqueness remains authoritative.
         }
@@ -179,21 +190,4 @@ public class DrawService {
         }
     }
 
-    private String writeJson(Object value) {
-        try {
-            return objectMapper.writeValueAsString(value);
-        } catch (JacksonException exception) {
-            throw new InterviewException(ErrorCode.INTERNAL_ERROR, exception,
-                    Constants.MessageKey.DRAW_SERIALIZATION_FAILED);
-        }
-    }
-
-    private <T> T readJson(String value, Class<T> type) {
-        try {
-            return objectMapper.readValue(value, type);
-        } catch (JacksonException exception) {
-            throw new InterviewException(ErrorCode.INTERNAL_ERROR, exception,
-                    Constants.MessageKey.DRAW_DESERIALIZATION_FAILED);
-        }
-    }
 }

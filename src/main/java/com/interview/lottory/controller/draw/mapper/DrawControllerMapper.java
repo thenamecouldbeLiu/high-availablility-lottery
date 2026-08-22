@@ -8,6 +8,8 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface DrawControllerMapper {
     DrawCommandBo toBo(DrawRequest request);
-    DrawResponseVo toVo(DrawResultBo bo);
+    DrawAcceptedVo toVo(DrawAcceptedBo bo);
+    DrawEventStatusVo toVo(DrawEventStatusBo bo);
+    java.util.List<DrawEventStatusVo> toVos(java.util.List<DrawEventStatusBo> bos);
     DrawItemResponseVo toVo(DrawItemBo bo);
 }

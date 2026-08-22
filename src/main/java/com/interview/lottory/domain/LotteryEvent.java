@@ -77,6 +77,9 @@ public class LotteryEvent implements Persistable<UUID> {
     @Column(name = "result_payload", columnDefinition = "jsonb")
     private String resultPayload;
 
+    @Column(name = "failure_code", length = 64)
+    private String failureCode;
+
     @Column(name = "retry_count", nullable = false)
     private int retryCount;
 
