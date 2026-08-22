@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
+import java.time.Instant;
 
 public interface LotteryCampaignRepository extends JpaRepository<LotteryCampaign, Long> {
     Optional<LotteryCampaign> findByIdAndDeletedFalse(Long id);
@@ -17,11 +18,12 @@ public interface LotteryCampaignRepository extends JpaRepository<LotteryCampaign
     @Query("""
             update LotteryCampaign c
                set c.deleted = true,
-                   c.deletedAt = CURRENT_TIMESTAMP,
+                   c.deletedAt = :deletedAt,
                    c.status = com.interview.lottory.enums.CampaignStatus.ENDED,
                    c.version = c.version + 1
              where c.id = :campaignId
                and c.deleted = false
             """)
-    int softDeleteById(@Param("campaignId") Long campaignId);
+    int softDeleteById(@Param("campaignId") Long campaignId,
+                       @Param("deletedAt") Instant deletedAt);
 }

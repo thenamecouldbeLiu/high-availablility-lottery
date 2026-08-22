@@ -1,17 +1,20 @@
 package com.interview.lottory.service.campaign;
 
-import com.interview.lottory.domain.*;
+import com.interview.lottory.domain.LotteryCampaign;
+import com.interview.lottory.domain.LotteryPrize;
 import com.interview.lottory.enums.CampaignStatus;
 import com.interview.lottory.enums.PrizeType;
+import com.interview.lottory.infra.Constants;
 import com.interview.lottory.infra.exception.ErrorCode;
 import com.interview.lottory.infra.exception.InterviewException;
-import com.interview.lottory.infra.Constants;
 import com.interview.lottory.repository.LotteryCampaignRepository;
 import com.interview.lottory.repository.LotteryPrizeRepository;
-import com.interview.lottory.service.campaign.dto.*;
+import com.interview.lottory.service.campaign.dto.CampaignBo;
+import com.interview.lottory.service.campaign.dto.CreateCampaignBo;
+import com.interview.lottory.service.campaign.dto.PrizeConfigBo;
+import com.interview.lottory.service.campaign.dto.UpdateCampaignBo;
 import com.interview.lottory.service.campaign.mapper.CampaignEntityMapper;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -98,7 +101,8 @@ public class CampaignService {
     @Transactional
     public void deletePrize(Long campaignId, Long prizeId) {
         LotteryCampaign campaign = getCampaignEntity(campaignId);
-        if (prizeRepository.softDeleteByIdAndCampaignId(prizeId, campaignId) != 1) {
+        if (prizeRepository.softDeleteByIdAndCampaignId(prizeId, campaignId,
+                java.time.Instant.now()) != 1) {
             throw new InterviewException(ErrorCode.PRIZE_NOT_FOUND);
         }
         validateIfActive(mapper.toBo(campaign));
@@ -107,8 +111,9 @@ public class CampaignService {
     @Transactional
     public void deleteCampaign(Long campaignId) {
         getCampaignEntity(campaignId);
-        prizeRepository.softDeleteAllByCampaignId(campaignId);
-        if (campaignRepository.softDeleteById(campaignId) != 1) {
+        java.time.Instant deletedAt = java.time.Instant.now();
+        prizeRepository.softDeleteAllByCampaignId(campaignId, deletedAt);
+        if (campaignRepository.softDeleteById(campaignId, deletedAt) != 1) {
             throw new InterviewException(ErrorCode.CAMPAIGN_NOT_FOUND);
         }
     }

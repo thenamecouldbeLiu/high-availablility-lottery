@@ -47,12 +47,13 @@ public interface LotteryEventRepository extends JpaRepository<LotteryEvent, UUID
     @Query("""
             update LotteryEvent e
                set e.status = com.interview.lottory.enums.LotteryEventStatus.PUBLISHED,
-                   e.publishedAt = CURRENT_TIMESTAMP,
+                   e.publishedAt = :publishedAt,
                    e.version = e.version + 1
              where e.eventId = :eventId
                and e.status = com.interview.lottory.enums.LotteryEventStatus.DISPATCHING
             """)
-    int markPublishedIfDispatching(@Param("eventId") UUID eventId);
+    int markPublishedIfDispatching(@Param("eventId") UUID eventId,
+                                   @Param("publishedAt") Instant publishedAt);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""

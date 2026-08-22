@@ -1,6 +1,10 @@
 package com.interview.lottory.controller.campaign.dto;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 import java.time.Instant;
 
 public record UpdateCampaignRequest(

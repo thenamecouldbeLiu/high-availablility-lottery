@@ -1,10 +1,15 @@
 package com.interview.lottory.service.draw.mapper;
 
-import com.interview.lottory.domain.*;
+import com.interview.lottory.domain.LotteryCampaign;
+import com.interview.lottory.domain.LotteryDraw;
+import com.interview.lottory.domain.LotteryEvent;
+import com.interview.lottory.domain.LotteryPrize;
 import com.interview.lottory.enums.LotteryEventStatus;
 import com.interview.lottory.infra.Constants;
 import com.interview.lottory.service.draw.dto.*;
-import org.mapstruct.*;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 
 import java.time.Instant;
 import java.util.List;

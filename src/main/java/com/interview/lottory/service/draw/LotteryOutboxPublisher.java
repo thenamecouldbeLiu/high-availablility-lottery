@@ -6,8 +6,8 @@ import com.interview.lottory.infra.config.MessagingProperties;
 import com.interview.lottory.repository.LotteryEventRepository;
 import com.interview.lottory.service.draw.mapper.DrawEntityMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -47,7 +47,7 @@ public class LotteryOutboxPublisher {
                 throw new IllegalStateException("RabbitMQ did not confirm event " + message.eventId());
             }
             transactionTemplate.executeWithoutResult(status ->
-                    eventRepository.markPublishedIfDispatching(message.eventId()));
+                    eventRepository.markPublishedIfDispatching(message.eventId(), Instant.now()));
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             markFailed(event);

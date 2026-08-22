@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.Instant;
 
 public interface LotteryPrizeRepository extends JpaRepository<LotteryPrize, Long> {
     List<LotteryPrize> findByCampaignIdAndEnabledTrueAndDeletedFalseOrderByDisplayOrderAsc(Long campaignId);
@@ -32,7 +33,7 @@ public interface LotteryPrizeRepository extends JpaRepository<LotteryPrize, Long
     @Query("""
             update LotteryPrize p
                set p.deleted = true,
-                   p.deletedAt = CURRENT_TIMESTAMP,
+                   p.deletedAt = :deletedAt,
                    p.enabled = false,
                    p.version = p.version + 1
              where p.id = :prizeId
@@ -40,17 +41,19 @@ public interface LotteryPrizeRepository extends JpaRepository<LotteryPrize, Long
                and p.deleted = false
             """)
     int softDeleteByIdAndCampaignId(@Param("prizeId") Long prizeId,
-                                    @Param("campaignId") Long campaignId);
+                                    @Param("campaignId") Long campaignId,
+                                    @Param("deletedAt") Instant deletedAt);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             update LotteryPrize p
                set p.deleted = true,
-                   p.deletedAt = CURRENT_TIMESTAMP,
+                   p.deletedAt = :deletedAt,
                    p.enabled = false,
                    p.version = p.version + 1
              where p.campaignId = :campaignId
                and p.deleted = false
             """)
-    int softDeleteAllByCampaignId(@Param("campaignId") Long campaignId);
+    int softDeleteAllByCampaignId(@Param("campaignId") Long campaignId,
+                                  @Param("deletedAt") Instant deletedAt);
 }

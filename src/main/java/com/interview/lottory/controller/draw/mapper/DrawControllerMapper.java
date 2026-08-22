@@ -1,7 +1,13 @@
 package com.interview.lottory.controller.draw.mapper;
 
-import com.interview.lottory.controller.draw.dto.*;
-import com.interview.lottory.service.draw.dto.*;
+import com.interview.lottory.controller.draw.dto.DrawAcceptedVo;
+import com.interview.lottory.controller.draw.dto.DrawEventStatusVo;
+import com.interview.lottory.controller.draw.dto.DrawItemResponseVo;
+import com.interview.lottory.controller.draw.dto.DrawRequest;
+import com.interview.lottory.service.draw.dto.DrawAcceptedBo;
+import com.interview.lottory.service.draw.dto.DrawCommandBo;
+import com.interview.lottory.service.draw.dto.DrawEventStatusBo;
+import com.interview.lottory.service.draw.dto.DrawItemBo;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
