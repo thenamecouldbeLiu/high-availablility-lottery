@@ -5,6 +5,7 @@ import com.interview.lottory.enums.CampaignStatus;
 import com.interview.lottory.enums.PrizeType;
 import com.interview.lottory.infra.exception.ErrorCode;
 import com.interview.lottory.infra.exception.InterviewException;
+import com.interview.lottory.infra.Constants;
 import com.interview.lottory.repository.*;
 import com.interview.lottory.service.draw.dto.*;
 import com.interview.lottory.service.draw.mapper.DrawEntityMapper;
@@ -49,7 +50,7 @@ public class DrawService {
             return cached;
         }
 
-        String lockKey = "lottery:idempotency:" + command.requestId();
+        String lockKey = Constants.RedisKey.IDEMPOTENCY_PREFIX + command.requestId();
         boolean acquired = acquireRequest(lockKey);
         if (!acquired) {
             return findExisting(command.requestId()).orElseThrow(
@@ -129,7 +130,7 @@ public class DrawService {
 
     private DrawResultBo readCachedResult(String requestId) {
         try {
-            Object value = redisTemplate.opsForValue().get("lottery:result:" + requestId);
+            Object value = redisTemplate.opsForValue().get(Constants.RedisKey.RESULT_PREFIX + requestId);
             return value instanceof DrawResultBo result ? result : null;
         } catch (RedisConnectionFailureException ignored) {
             return null;
@@ -138,7 +139,8 @@ public class DrawService {
 
     private boolean acquireRequest(String key) {
         try {
-            return Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(key, "PROCESSING", IDEMPOTENCY_TTL));
+            return Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(
+                    key, Constants.ProcessStatus.PROCESSING, IDEMPOTENCY_TTL));
         } catch (RedisConnectionFailureException ignored) {
             return true;
         }
@@ -146,7 +148,7 @@ public class DrawService {
 
     private void cacheResult(String requestId, DrawResultBo result) {
         try {
-            redisTemplate.opsForValue().set("lottery:result:" + requestId, result, RESULT_TTL);
+            redisTemplate.opsForValue().set(Constants.RedisKey.RESULT_PREFIX + requestId, result, RESULT_TTL);
         } catch (RedisConnectionFailureException ignored) {
             // PostgreSQL remains the authoritative idempotency store.
         }
@@ -165,7 +167,8 @@ public class DrawService {
                 || command.userId() == null || command.userId().isBlank()
                 || command.campaignId() == null || command.drawCount() < 1
                 || command.drawCount() > MAX_BATCH_DRAWS) {
-            throw new InterviewException(ErrorCode.INVALID_REQUEST, "單次請求可連抽 1 至 100 次");
+            throw new InterviewException(ErrorCode.INVALID_REQUEST, Constants.MessageKey.INVALID_DRAW_COUNT,
+                    1, MAX_BATCH_DRAWS);
         }
     }
 
@@ -181,7 +184,8 @@ public class DrawService {
         try {
             return objectMapper.writeValueAsString(value);
         } catch (JacksonException exception) {
-            throw new InterviewException(ErrorCode.INTERNAL_ERROR, "序列化抽獎資料失敗", exception);
+            throw new InterviewException(ErrorCode.INTERNAL_ERROR, exception,
+                    Constants.MessageKey.DRAW_SERIALIZATION_FAILED);
         }
     }
 
@@ -189,7 +193,8 @@ public class DrawService {
         try {
             return objectMapper.readValue(value, type);
         } catch (JacksonException exception) {
-            throw new InterviewException(ErrorCode.INTERNAL_ERROR, "讀取抽獎結果失敗", exception);
+            throw new InterviewException(ErrorCode.INTERNAL_ERROR, exception,
+                    Constants.MessageKey.DRAW_DESERIALIZATION_FAILED);
         }
     }
 }

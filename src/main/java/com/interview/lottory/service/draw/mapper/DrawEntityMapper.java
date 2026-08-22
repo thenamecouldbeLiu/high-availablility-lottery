@@ -2,6 +2,7 @@ package com.interview.lottory.service.draw.mapper;
 
 import com.interview.lottory.domain.*;
 import com.interview.lottory.enums.LotteryEventStatus;
+import com.interview.lottory.infra.Constants;
 import com.interview.lottory.service.draw.dto.*;
 import org.mapstruct.*;
 
@@ -21,7 +22,7 @@ public interface DrawEntityMapper {
     @Mapping(target = "campaignId", source = "command.campaignId")
     @Mapping(target = "userId", source = "command.userId")
     @Mapping(target = "drawCount", source = "command.drawCount")
-    @Mapping(target = "eventType", constant = "LOTTERY_DRAW_COMPLETED")
+    @Mapping(target = "eventType", constant = Constants.EventType.LOTTERY_DRAW_COMPLETED)
     @Mapping(target = "status", constant = "PENDING")
     @Mapping(target = "payload", source = "payload")
     LotteryEvent toEvent(DrawCommandBo command, UUID eventId, String payload);

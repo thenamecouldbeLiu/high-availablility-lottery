@@ -1,7 +1,9 @@
 package com.interview.lottory.infra.exception;
 
+import com.interview.lottory.util.I18nUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -11,7 +13,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.time.Instant;
 
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
+    private final I18nUtil i18nUtil;
+
     @ExceptionHandler(InterviewException.class)
     public ResponseEntity<ApiErrorResponse> handleInterviewException(
             InterviewException exception,
@@ -19,7 +24,7 @@ public class GlobalExceptionHandler {
         ApiErrorResponse response = new ApiErrorResponse(
                 exception.getErrorCode().getCode(),
                 exception.getErrorType().name(),
-                exception.getMessage(),
+                i18nUtil.getMessage(exception.getMessageKey(), exception.getMessageArguments()),
                 request.getRequestURI(),
                 Instant.now()
         );
@@ -34,7 +39,7 @@ public class GlobalExceptionHandler {
         String message = exception.getBindingResult().getFieldErrors().stream()
                 .findFirst()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .orElse(ErrorCode.INVALID_REQUEST.getDefaultMessage());
+                .orElseGet(() -> i18nUtil.getMessage(ErrorCode.INVALID_REQUEST.getMessageKey()));
         return build(ErrorCode.INVALID_REQUEST, message, request);
     }
 

@@ -5,6 +5,7 @@ import com.interview.lottory.enums.CampaignStatus;
 import com.interview.lottory.enums.PrizeType;
 import com.interview.lottory.infra.exception.ErrorCode;
 import com.interview.lottory.infra.exception.InterviewException;
+import com.interview.lottory.infra.Constants;
 import com.interview.lottory.repository.LotteryCampaignRepository;
 import com.interview.lottory.repository.LotteryPrizeRepository;
 import com.interview.lottory.service.campaign.dto.*;
@@ -27,7 +28,8 @@ public class CampaignService {
     @Transactional
     public CampaignBo create(CreateCampaignBo command) {
         if (campaignRepository.existsByCampaignCode(command.campaignCode())) {
-            throw new InterviewException(ErrorCode.DUPLICATE_REQUEST, "活動代碼已存在");
+            throw new InterviewException(ErrorCode.DUPLICATE_REQUEST,
+                    Constants.MessageKey.CAMPAIGN_CODE_EXISTS, command.campaignCode());
         }
         validatePeriod(command.startsAt(), command.endsAt());
         return withPrizes(campaignRepository.save(mapper.toEntity(command)));
@@ -58,7 +60,8 @@ public class CampaignService {
         PrizeConfigBo current = mapper.toBo(entity);
         long awarded = current.totalStock() - current.remainingStock();
         if (command.prizeType() == PrizeType.PRIZE && command.totalStock() < awarded) {
-            throw new InterviewException(ErrorCode.INVALID_REQUEST, "新庫存不得小於已發放數量");
+            throw new InterviewException(ErrorCode.INVALID_REQUEST,
+                    Constants.MessageKey.STOCK_BELOW_AWARDED, awarded);
         }
         PrizeConfigBo adjusted = new PrizeConfigBo(command.id(), command.campaignId(), command.prizeCode(),
                 command.name(), command.prizeType(), command.probability(), command.totalStock(),
@@ -138,7 +141,8 @@ public class CampaignService {
 
     private void validatePeriod(java.time.Instant startsAt, java.time.Instant endsAt) {
         if (startsAt == null || endsAt == null || !endsAt.isAfter(startsAt)) {
-            throw new InterviewException(ErrorCode.INVALID_REQUEST, "活動結束時間必須晚於開始時間");
+            throw new InterviewException(ErrorCode.INVALID_REQUEST,
+                    Constants.MessageKey.INVALID_CAMPAIGN_PERIOD);
         }
     }
 }
