@@ -5,6 +5,12 @@ public final class ErrorCode {
             new ErrorCode("SUCCESS", ErrorType.SUCCESS, 200, "error.success");
     public static final ErrorCode INVALID_REQUEST =
             new ErrorCode("INVALID_REQUEST", ErrorType.VALIDATION, 400, "error.invalid-request");
+    public static final ErrorCode AUTHENTICATION_REQUIRED =
+            new ErrorCode("AUTHENTICATION_REQUIRED", ErrorType.SECURITY, 401, "error.authentication-required");
+    public static final ErrorCode ACCESS_DENIED =
+            new ErrorCode("ACCESS_DENIED", ErrorType.SECURITY, 403, "error.access-denied");
+    public static final ErrorCode USER_NOT_FOUND =
+            new ErrorCode("USER_NOT_FOUND", ErrorType.NOT_FOUND, 404, "error.user-not-found");
     public static final ErrorCode CAMPAIGN_NOT_FOUND =
             new ErrorCode("CAMPAIGN_NOT_FOUND", ErrorType.NOT_FOUND, 404, "error.campaign-not-found");
     public static final ErrorCode CAMPAIGN_NOT_ACTIVE =

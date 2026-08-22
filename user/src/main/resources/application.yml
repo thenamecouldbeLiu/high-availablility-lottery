@@ -1,0 +1,64 @@
+spring:
+  application:
+    name: user
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+  datasource:
+    url: "${DB_URL:jdbc:postgresql://localhost:5432/lottory}"
+    username: "${DB_USERNAME:lottory}"
+    password: "${DB_PASSWORD:lottory}"
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:20}
+      minimum-idle: ${DB_POOL_MIN_IDLE:5}
+      connection-timeout: ${DB_CONNECTION_TIMEOUT_MS:30000}
+      idle-timeout: ${DB_IDLE_TIMEOUT_MS:600000}
+      max-lifetime: ${DB_MAX_LIFETIME_MS:1800000}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: "${KEYCLOAK_ISSUER_URI:http://localhost:8080/realms/lottery}"
+          audiences: "${KEYCLOAK_AUDIENCE:user-service}"
+      client:
+        provider:
+          keycloak:
+            issuer-uri: "${KEYCLOAK_ISSUER_URI:http://localhost:8080/realms/lottery}"
+        registration:
+          keycloak-backend:
+            provider: keycloak
+            client-id: "${KEYCLOAK_BACKEND_CLIENT_ID:user-service}"
+            client-secret: "${KEYCLOAK_BACKEND_CLIENT_SECRET:change-me}"
+            client-authentication-method: client_secret_basic
+            authorization-grant-type: client_credentials
+            scope: openid
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+
+app:
+  keycloak:
+    backend:
+      registration-id: keycloak-backend
+      client-id: "${KEYCLOAK_BACKEND_CLIENT_ID:user-service}"
+    frontend:
+      client-id: "${KEYCLOAK_FRONTEND_CLIENT_ID:lottery-web}"
+      authorization-uri: "${KEYCLOAK_AUTHORIZATION_URI:http://localhost:8080/realms/lottery/protocol/openid-connect/auth}"
+      token-uri: "${KEYCLOAK_TOKEN_URI:http://localhost:8080/realms/lottery/protocol/openid-connect/token}"
+      redirect-uri: "${KEYCLOAK_FRONTEND_REDIRECT_URI:http://localhost:3000/callback}"
+      scopes: "openid,profile,email"
+      pkce-method: S256
