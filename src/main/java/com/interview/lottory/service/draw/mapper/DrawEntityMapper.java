@@ -1,6 +1,7 @@
 package com.interview.lottory.service.draw.mapper;
 
 import com.interview.lottory.domain.*;
+import com.interview.lottory.enums.LotteryEventStatus;
 import com.interview.lottory.service.draw.dto.*;
 import org.mapstruct.*;
 

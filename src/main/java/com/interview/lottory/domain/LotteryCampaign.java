@@ -1,10 +1,13 @@
 package com.interview.lottory.domain;
 
+import com.interview.lottory.enums.CampaignStatus;
+import com.interview.lottory.util.IdGeneratorUtil;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.domain.Persistable;
 
 import java.time.Instant;
 
@@ -13,10 +16,30 @@ import java.time.Instant;
 @Entity
 @Table(name = "lottery_campaign")
 @NoArgsConstructor
-public class LotteryCampaign {
+public class LotteryCampaign implements Persistable<Long> {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long id = IdGeneratorUtil.nextSnowflakeId();
+
+    @Transient
+    private boolean newEntity = true;
+
+    @Override
+    public boolean isNew() {
+        return newEntity;
+    }
+
+    @PostLoad
+    @PostPersist
+    void markNotNew() {
+        newEntity = false;
+    }
+
+    @PrePersist
+    void ensureId() {
+        if (id == null) {
+            id = IdGeneratorUtil.nextSnowflakeId();
+        }
+    }
 
     @Column(name = "campaign_code", nullable = false, length = 64, unique = true)
     private String campaignCode;

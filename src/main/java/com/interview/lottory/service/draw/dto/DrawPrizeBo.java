@@ -1,6 +1,6 @@
 package com.interview.lottory.service.draw.dto;
 
-import com.interview.lottory.domain.PrizeType;
+import com.interview.lottory.enums.PrizeType;
 import java.math.BigDecimal;
 
 public record DrawPrizeBo(Long id, String prizeCode, String name, PrizeType prizeType,

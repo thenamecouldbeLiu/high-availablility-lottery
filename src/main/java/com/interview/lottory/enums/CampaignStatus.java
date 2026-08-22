@@ -1,4 +1,4 @@
-package com.interview.lottory.domain;
+package com.interview.lottory.enums;
 
 public enum CampaignStatus {
     DRAFT, ACTIVE, PAUSED, ENDED

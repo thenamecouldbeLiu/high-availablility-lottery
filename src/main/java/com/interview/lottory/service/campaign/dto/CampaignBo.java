@@ -1,6 +1,6 @@
 package com.interview.lottory.service.campaign.dto;
 
-import com.interview.lottory.domain.CampaignStatus;
+import com.interview.lottory.enums.CampaignStatus;
 
 import java.time.Instant;
 import java.util.List;

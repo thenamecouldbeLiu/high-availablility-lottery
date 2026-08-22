@@ -1,11 +1,14 @@
 package com.interview.lottory.service.draw;
 
 import com.interview.lottory.domain.*;
+import com.interview.lottory.enums.CampaignStatus;
+import com.interview.lottory.enums.PrizeType;
 import com.interview.lottory.infra.exception.ErrorCode;
 import com.interview.lottory.infra.exception.InterviewException;
 import com.interview.lottory.repository.*;
 import com.interview.lottory.service.draw.dto.*;
 import com.interview.lottory.service.draw.mapper.DrawEntityMapper;
+import com.interview.lottory.util.IdGeneratorUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.redis.RedisConnectionFailureException;
@@ -72,7 +75,7 @@ public class DrawService {
                 .orElseThrow(() -> new InterviewException(ErrorCode.CAMPAIGN_NOT_FOUND));
         validateCampaign(campaign);
 
-        UUID eventId = UUID.randomUUID();
+        UUID eventId = IdGeneratorUtil.nextUuid();
         LotteryEvent event = mapper.toEvent(command, eventId, writeJson(command));
         eventRepository.saveAndFlush(event);
 

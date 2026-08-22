@@ -1,5 +1,7 @@
 package com.interview.lottory.domain;
 
+import com.interview.lottory.enums.LotteryEventStatus;
+import com.interview.lottory.util.IdGeneratorUtil;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -7,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.springframework.data.domain.Persistable;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -16,10 +19,36 @@ import java.util.UUID;
 @Entity
 @Table(name = "lottery_event")
 @NoArgsConstructor
-public class LotteryEvent {
+public class LotteryEvent implements Persistable<UUID> {
     @Id
     @Column(name = "event_id", nullable = false, updatable = false)
-    private UUID eventId;
+    private UUID eventId = IdGeneratorUtil.nextUuid();
+
+    @Transient
+    private boolean newEntity = true;
+
+    @Override
+    public UUID getId() {
+        return eventId;
+    }
+
+    @Override
+    public boolean isNew() {
+        return newEntity;
+    }
+
+    @PostLoad
+    @PostPersist
+    void markNotNew() {
+        newEntity = false;
+    }
+
+    @PrePersist
+    void ensureId() {
+        if (eventId == null) {
+            eventId = IdGeneratorUtil.nextUuid();
+        }
+    }
 
     @Column(name = "request_id", nullable = false, updatable = false, length = 128, unique = true)
     private String requestId;

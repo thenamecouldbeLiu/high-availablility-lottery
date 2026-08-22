@@ -1,6 +1,8 @@
 package com.interview.lottory.service.campaign;
 
 import com.interview.lottory.domain.*;
+import com.interview.lottory.enums.CampaignStatus;
+import com.interview.lottory.enums.PrizeType;
 import com.interview.lottory.infra.exception.ErrorCode;
 import com.interview.lottory.infra.exception.InterviewException;
 import com.interview.lottory.repository.LotteryCampaignRepository;

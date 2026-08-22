@@ -1,7 +1,7 @@
 package com.interview.lottory.service.draw;
 
 import com.interview.lottory.domain.LotteryEvent;
-import com.interview.lottory.domain.LotteryEventStatus;
+import com.interview.lottory.enums.LotteryEventStatus;
 import com.interview.lottory.infra.config.MessagingProperties;
 import com.interview.lottory.repository.LotteryEventRepository;
 import com.interview.lottory.service.draw.mapper.DrawEntityMapper;

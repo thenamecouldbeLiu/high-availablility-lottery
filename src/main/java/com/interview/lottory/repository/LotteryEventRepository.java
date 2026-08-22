@@ -1,7 +1,7 @@
 package com.interview.lottory.repository;
 
 import com.interview.lottory.domain.LotteryEvent;
-import com.interview.lottory.domain.LotteryEventStatus;
+import com.interview.lottory.enums.LotteryEventStatus;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

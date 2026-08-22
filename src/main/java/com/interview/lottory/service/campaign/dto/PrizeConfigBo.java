@@ -1,6 +1,6 @@
 package com.interview.lottory.service.campaign.dto;
 
-import com.interview.lottory.domain.PrizeType;
+import com.interview.lottory.enums.PrizeType;
 
 import java.math.BigDecimal;
 
