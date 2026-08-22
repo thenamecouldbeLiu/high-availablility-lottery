@@ -11,6 +11,7 @@ import java.util.Optional;
 
 public interface LotteryPrizeRepository extends JpaRepository<LotteryPrize, Long> {
     List<LotteryPrize> findByCampaignIdAndEnabledTrueOrderByDisplayOrderAsc(Long campaignId);
+    List<LotteryPrize> findByCampaignIdOrderByDisplayOrderAsc(Long campaignId);
     Optional<LotteryPrize> findByCampaignIdAndPrizeCode(Long campaignId, String prizeCode);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)

@@ -15,7 +15,7 @@ import java.util.UUID;
 @Setter
 @Entity
 @Table(name = "lottery_event")
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 public class LotteryEvent {
     @Id
     @Column(name = "event_id", nullable = false, updatable = false)

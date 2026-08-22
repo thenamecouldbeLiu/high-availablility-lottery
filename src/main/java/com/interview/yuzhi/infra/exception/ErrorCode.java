@@ -18,6 +18,9 @@ public final class ErrorCode {
             new ErrorCode("DRAW_LIMIT_EXCEEDED", ErrorType.BUSINESS, 422, "已超過允許的抽獎次數");
     public static final ErrorCode OUT_OF_STOCK =
             new ErrorCode("OUT_OF_STOCK", ErrorType.BUSINESS, 422, "獎品庫存不足");
+    public static final ErrorCode INVALID_PRIZE_CONFIGURATION =
+            new ErrorCode("INVALID_PRIZE_CONFIGURATION", ErrorType.VALIDATION, 400,
+                    "活動必須有 3 種獎品與 1 個銘謝惠顧，且機率總和必須為 100%");
     public static final ErrorCode DUPLICATE_REQUEST =
             new ErrorCode("DUPLICATE_REQUEST", ErrorType.CONFLICT, 409, "此抽獎請求已處理");
     public static final ErrorCode MQ_OPERATION_FAILED =

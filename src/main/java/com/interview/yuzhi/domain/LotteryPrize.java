@@ -13,7 +13,7 @@ import java.time.Instant;
 @Setter
 @Entity
 @Table(name = "lottery_prize")
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 public class LotteryPrize {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
