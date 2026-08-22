@@ -1,4 +1,4 @@
-package com.interview.lottory.infra.exception;
+package com.interview.common.exception;
 
 public enum ErrorType {
     SUCCESS,

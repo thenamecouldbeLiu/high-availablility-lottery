@@ -1,7 +1,7 @@
 package com.interview.lottory.service.draw;
 
-import com.interview.lottory.infra.exception.ErrorCode;
-import com.interview.lottory.infra.exception.InterviewException;
+import com.interview.common.exception.ErrorCode;
+import com.interview.common.exception.InterviewException;
 import com.interview.lottory.service.draw.dto.DrawResultBo;
 import com.interview.lottory.service.draw.dto.LotteryEventMessageBo;
 import com.rabbitmq.client.Channel;

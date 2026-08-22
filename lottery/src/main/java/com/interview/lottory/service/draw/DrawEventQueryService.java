@@ -1,8 +1,8 @@
 package com.interview.lottory.service.draw;
 
 import com.interview.lottory.domain.LotteryEvent;
-import com.interview.lottory.infra.exception.ErrorCode;
-import com.interview.lottory.infra.exception.InterviewException;
+import com.interview.common.exception.ErrorCode;
+import com.interview.common.exception.InterviewException;
 import com.interview.lottory.repository.LotteryDrawRepository;
 import com.interview.lottory.repository.LotteryEventRepository;
 import com.interview.lottory.service.draw.dto.DrawEventStatusBo;

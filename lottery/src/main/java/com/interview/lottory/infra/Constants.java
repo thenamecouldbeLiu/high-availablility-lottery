@@ -23,19 +23,6 @@ public final class Constants {
     }
 
     public static final class MessageKey {
-        public static final String SUCCESS = "error.success";
-        public static final String INVALID_REQUEST = "error.invalid-request";
-        public static final String CAMPAIGN_NOT_FOUND = "error.campaign-not-found";
-        public static final String CAMPAIGN_NOT_ACTIVE = "error.campaign-not-active";
-        public static final String PRIZE_NOT_FOUND = "error.prize-not-found";
-        public static final String DRAW_LIMIT_EXCEEDED = "error.draw-limit-exceeded";
-        public static final String OUT_OF_STOCK = "error.out-of-stock";
-        public static final String INVALID_PRIZE_CONFIGURATION = "error.invalid-prize-configuration";
-        public static final String DUPLICATE_REQUEST = "error.duplicate-request";
-        public static final String MQ_OPERATION_FAILED = "error.mq-operation-failed";
-        public static final String REDIS_OPERATION_FAILED = "error.redis-operation-failed";
-        public static final String DATABASE_OPERATION_FAILED = "error.database-operation-failed";
-        public static final String INTERNAL_ERROR = "error.internal";
         public static final String CAMPAIGN_CODE_EXISTS = "validation.campaign-code-exists";
         public static final String STOCK_BELOW_AWARDED = "validation.stock-below-awarded";
         public static final String INVALID_CAMPAIGN_PERIOD = "validation.invalid-campaign-period";

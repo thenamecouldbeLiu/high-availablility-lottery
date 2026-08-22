@@ -1,8 +1,8 @@
 package com.interview.lottory.util;
 
 import com.interview.lottory.infra.Constants;
-import com.interview.lottory.infra.exception.ErrorCode;
-import com.interview.lottory.infra.exception.InterviewException;
+import com.interview.common.exception.ErrorCode;
+import com.interview.common.exception.InterviewException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.JacksonException;

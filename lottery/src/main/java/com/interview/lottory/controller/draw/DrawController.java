@@ -1,5 +1,6 @@
 package com.interview.lottory.controller.draw;
 
+import com.interview.common.response.Response;
 import com.interview.lottory.controller.draw.dto.DrawAcceptedVo;
 import com.interview.lottory.controller.draw.dto.DrawEventStatusVo;
 import com.interview.lottory.controller.draw.dto.DrawRequest;
@@ -30,8 +31,9 @@ public class DrawController {
     private final DrawControllerMapper mapper;
 
     @PostMapping("/draw")
-    public ResponseEntity<DrawAcceptedVo> draw(@Valid @RequestBody DrawRequest request) {
-        return ResponseEntity.accepted().body(mapper.toVo(service.submit(mapper.toBo(request))));
+    public ResponseEntity<Response<DrawAcceptedVo>> draw(@Valid @RequestBody DrawRequest request) {
+        return ResponseEntity.accepted()
+                .body(Response.success(mapper.toVo(service.submit(mapper.toBo(request)))));
     }
 
     @GetMapping(value = "/events/{eventId}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
@@ -40,15 +42,17 @@ public class DrawController {
     }
 
     @GetMapping("/events/{eventId}")
-    public DrawEventStatusVo event(@PathVariable UUID eventId, @RequestParam @NotBlank String userId) {
-        return mapper.toVo(queryService.getEventByEventIdAndUserId(eventId, userId));
+    public Response<DrawEventStatusVo> event(
+            @PathVariable UUID eventId, @RequestParam @NotBlank String userId) {
+        return Response.success(mapper.toVo(queryService.getEventByEventIdAndUserId(eventId, userId)));
     }
 
     @GetMapping("/users/{userId}/draws")
-    public List<DrawEventStatusVo> history(
+    public Response<List<DrawEventStatusVo>> history(
             @PathVariable @NotBlank String userId,
             @RequestParam(required = false) Long campaignId,
             @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
-        return mapper.toVos(queryService.getUserEventHistoryByCampaignId(userId, campaignId, limit));
+        return Response.success(
+                mapper.toVos(queryService.getUserEventHistoryByCampaignId(userId, campaignId, limit)));
     }
 }
