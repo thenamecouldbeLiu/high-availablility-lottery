@@ -1,1 +1,3 @@
-rootProject.name = 'lottery'
+rootProject.name = 'main'
+
+include 'lottery', 'user'
