@@ -6,6 +6,7 @@ import com.interview.lottory.controller.draw.dto.DrawEventStatusVo;
 import com.interview.lottory.controller.draw.mapper.DrawControllerMapper;
 import com.interview.lottory.service.draw.DrawService;
 import com.interview.lottory.service.draw.DrawEventQueryService;
+import com.interview.lottory.service.sse.DrawSseService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -40,7 +41,7 @@ public class DrawController {
 
     @GetMapping("/events/{eventId}")
     public DrawEventStatusVo event(@PathVariable UUID eventId, @RequestParam @NotBlank String userId) {
-        return mapper.toVo(queryService.get(eventId, userId));
+        return mapper.toVo(queryService.getEventByEventIdAndUserId(eventId, userId));
     }
 
     @GetMapping("/users/{userId}/draws")
@@ -48,6 +49,6 @@ public class DrawController {
             @PathVariable @NotBlank String userId,
             @RequestParam(required = false) Long campaignId,
             @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
-        return mapper.toVos(queryService.history(userId, campaignId, limit));
+        return mapper.toVos(queryService.getUserEventHistoryByCampaignId(userId, campaignId, limit));
     }
 }

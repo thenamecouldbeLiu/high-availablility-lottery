@@ -1,8 +1,9 @@
-package com.interview.lottory.controller.draw;
+package com.interview.lottory.service.sse;
 
 import com.interview.lottory.controller.draw.mapper.DrawControllerMapper;
 import com.interview.lottory.infra.config.DrawProperties;
 import com.interview.lottory.service.draw.DrawEventQueryService;
+import com.interview.lottory.service.draw.dto.DrawEventStatusBo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Component;
@@ -23,7 +24,7 @@ public class DrawSseService {
 
     public SseEmitter subscribe(UUID eventId, String userId) {
         SseEmitter emitter = new SseEmitter(properties.sseTimeout().toMillis());
-        var initial = queryService.get(eventId, userId);
+        DrawEventStatusBo initial = queryService.getEventByEventIdAndUserId(eventId, userId);
         send(emitter, initial);
         if (initial.terminal()) {
             emitter.complete();
@@ -33,7 +34,7 @@ public class DrawSseService {
         AtomicReference<ScheduledFuture<?>> taskRef = new AtomicReference<>();
         ScheduledFuture<?> task = taskScheduler.scheduleAtFixedRate(() -> {
             try {
-                var status = queryService.get(eventId, userId);
+                var status = queryService.getEventByEventIdAndUserId(eventId, userId);
                 send(emitter, status);
                 if (status.terminal()) {
                     cancel(taskRef);

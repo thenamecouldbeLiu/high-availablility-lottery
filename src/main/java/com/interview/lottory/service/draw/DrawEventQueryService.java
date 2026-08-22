@@ -23,14 +23,14 @@ public class DrawEventQueryService {
     private final DrawEntityMapper mapper;
 
     @Transactional(readOnly = true)
-    public DrawEventStatusBo get(UUID eventId, String userId) {
+    public DrawEventStatusBo getEventByEventIdAndUserId(UUID eventId, String userId) {
         LotteryEvent event = eventRepository.findByEventIdAndUserId(eventId, userId)
                 .orElseThrow(() -> new InterviewException(ErrorCode.INVALID_REQUEST));
         return toBo(event);
     }
 
     @Transactional(readOnly = true)
-    public List<DrawEventStatusBo> history(String userId, Long campaignId, int limit) {
+    public List<DrawEventStatusBo> getUserEventHistoryByCampaignId(String userId, Long campaignId, int limit) {
         PageRequest page = PageRequest.of(0, limit);
         List<LotteryEvent> events = campaignId == null
                 ? eventRepository.findByUserIdOrderByCreatedAtDesc(userId, page)
