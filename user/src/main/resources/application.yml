@@ -56,9 +56,10 @@ management:
 springdoc:
   api-docs:
     enabled: ${SWAGGER_API_DOCS_ENABLED:true}
+    path: /swagger/v1/user/api-docs
   swagger-ui:
     enabled: ${SWAGGER_UI_ENABLED:true}
-    path: /swagger-ui.html
+    path: /swagger/v1/user
     persist-authorization: true
     oauth:
       client-id: "${USER_SWAGGER_CLIENT_ID:user-service}"

@@ -34,8 +34,7 @@ public class KeycloakConfig {
                         .requestMatchers(
                                 "/api/auth/config",
                                 "/actuator/health/**",
-                                "/v3/api-docs/**",
-                                "/swagger-ui.html",
+                                "/swagger/**",
                                 "/swagger-ui/**")
                         .permitAll()
                         .anyRequest().hasAnyRole("ADMIN", "NORMAL_USER"))

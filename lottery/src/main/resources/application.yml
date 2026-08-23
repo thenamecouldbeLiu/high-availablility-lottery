@@ -69,10 +69,10 @@ spring:
 springdoc:
   api-docs:
     enabled: ${SWAGGER_API_DOCS_ENABLED:true}
-    path: /api-docs
+    path: /swagger/v1/lottery/api-docs
   swagger-ui:
     enabled: ${SWAGGER_UI_ENABLED:true}
-    path: /swagger-ui.html
+    path: /swagger/v1/lottery
     operations-sorter: method
     tags-sorter: alpha
     display-request-duration: true
@@ -80,7 +80,7 @@ springdoc:
     try-it-out-enabled: true
     disable-swagger-default-url: true
     persist-authorization: true
-    oauth2-redirect-url: "${SWAGGER_OAUTH2_REDIRECT_URI:http://localhost:8080/swagger-ui/oauth2-redirect.html}"
+    oauth2-redirect-url: "${SWAGGER_OAUTH2_REDIRECT_URI:http://localhost:8080/swagger/v1/swagger-ui/oauth2-redirect.html}"
     oauth:
       client-id: "${FRONTEND_KEYCLOAK_CLIENT_ID:lottery-web}"
       app-name: Lottery Swagger PKCE
