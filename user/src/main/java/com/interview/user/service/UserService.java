@@ -6,6 +6,8 @@ import com.interview.user.controller.dto.CreateUserRequest;
 import com.interview.user.controller.dto.UpdateUserRequest;
 import com.interview.user.controller.dto.UserResponse;
 import com.interview.user.domain.User;
+import com.interview.user.domain.UserRole;
+import com.interview.user.infra.security.AuthenticatedUser;
 import com.interview.user.repository.UserRepository;
 import com.interview.user.utils.UserUtil;
 import org.springframework.data.domain.Page;
@@ -39,11 +41,18 @@ public class UserService {
         return UserResponse.from(user);
     }
 
-    public UserResponse getCurrent() {
-        String subject = UserUtil.currentSubject();
-        return repository.findByKeycloakSubject(subject)
+    @Transactional
+    public UserResponse getOrCreateCurrentUser() {
+        AuthenticatedUser currentUser = UserUtil.requireCurrentUser();
+        return repository.findByKeycloakSubject(currentUser.subject())
                 .map(UserResponse::from)
-                .orElseThrow(() -> new InterviewException(ErrorCode.USER_NOT_FOUND));
+                .orElseGet(() -> UserResponse.from(repository.save(new User(
+                        currentUser.subject(),
+                        currentUser.username(),
+                        currentUser.email(),
+                        currentUser.username(),
+                        currentUser.isAdmin() ? UserRole.ADMIN : UserRole.NORMAL_USER,
+                        true))));
     }
 
     @PreAuthorize("hasRole('ADMIN')")

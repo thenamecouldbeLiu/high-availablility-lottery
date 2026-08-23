@@ -70,6 +70,13 @@ springdoc:
     filter: true
     try-it-out-enabled: true
     disable-swagger-default-url: true
+    persist-authorization: true
+    oauth2-redirect-url: "${SWAGGER_OAUTH2_REDIRECT_URI:http://localhost:8080/swagger-ui/oauth2-redirect.html}"
+    oauth:
+      client-id: "${KEYCLOAK_FRONTEND_CLIENT_ID:lottery-web}"
+      app-name: Lottery Swagger PKCE
+      scopes: openid,profile,email
+      use-pkce-with-authorization-code-grant: true
   packages-to-scan: com.interview.lottory.controller
   paths-to-match: /api/**
   show-actuator: false
@@ -85,6 +92,10 @@ management:
         include: health,info,prometheus
 
 app:
+  swagger:
+    oauth2:
+      authorization-url: "${KEYCLOAK_AUTHORIZATION_URI:http://localhost:8081/realms/lottery/protocol/openid-connect/auth}"
+      token-url: "${KEYCLOAK_TOKEN_URI:http://localhost:8081/realms/lottery/protocol/openid-connect/token}"
   database:
     transaction-timeout-seconds: ${DB_TRANSACTION_TIMEOUT_SECONDS:10}
   lottery:

@@ -16,6 +16,8 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class UserServiceTest {
@@ -49,6 +51,36 @@ class UserServiceTest {
                 .isInstanceOf(InterviewException.class)
                 .extracting(error -> ((InterviewException) error).getErrorCode().getCode())
                 .isEqualTo("ACCESS_DENIED");
+    }
+
+    @Test
+    void getCurrentReturnsExistingUser() {
+        User user = user("own-sub");
+        when(repository.findByKeycloakSubject("own-sub")).thenReturn(Optional.of(user));
+        UserRequestContext.set(new AuthenticatedUser("own-sub", "alice", "alice@example.com",
+                Set.of("NORMAL_USER")));
+
+        assertThat(service.getOrCreateCurrentUser().keycloakSubject()).isEqualTo("own-sub");
+        verify(repository, never()).save(org.mockito.ArgumentMatchers.any(User.class));
+    }
+
+    @Test
+    void getCurrentCreatesUserFromTokenWhenMissing() {
+        when(repository.findByKeycloakSubject("new-sub")).thenReturn(Optional.empty());
+        when(repository.save(org.mockito.ArgumentMatchers.any(User.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        UserRequestContext.set(new AuthenticatedUser("new-sub", "alice", "alice@example.com",
+                Set.of("ADMIN")));
+
+        var response = service.getOrCreateCurrentUser();
+
+        assertThat(response.keycloakSubject()).isEqualTo("new-sub");
+        assertThat(response.username()).isEqualTo("alice");
+        assertThat(response.email()).isEqualTo("alice@example.com");
+        assertThat(response.displayName()).isEqualTo("alice");
+        assertThat(response.role()).isEqualTo(UserRole.ADMIN);
+        assertThat(response.enabled()).isTrue();
+        verify(repository).save(org.mockito.ArgumentMatchers.any(User.class));
     }
 
     private User user(String subject) {

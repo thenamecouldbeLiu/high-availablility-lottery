@@ -33,7 +33,7 @@ public class UserController {
 
     @GetMapping("/me")
     public Response<UserResponse> me() {
-        return Response.success(service.getCurrent());
+        return Response.success(service.getOrCreateCurrentUser());
     }
 
     @GetMapping("/{id}")
