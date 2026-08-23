@@ -39,7 +39,6 @@ CREATE TABLE lottery_prize (
     deleted_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_prize_campaign FOREIGN KEY (campaign_id) REFERENCES lottery_campaign (id),
     CONSTRAINT ck_prize_type CHECK (prize_type IN ('PRIZE', 'NO_PRIZE')),
     CONSTRAINT ck_prize_probability CHECK (probability >= 0 AND probability <= 1),
     CONSTRAINT ck_prize_stock CHECK (total_stock >= 0 AND remaining_stock >= 0 AND remaining_stock <= total_stock),
@@ -70,7 +69,6 @@ CREATE TABLE lottery_event (
     version BIGINT NOT NULL DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_event_campaign FOREIGN KEY (campaign_id) REFERENCES lottery_campaign (id),
     CONSTRAINT uk_lottery_event_request UNIQUE (request_id),
     CONSTRAINT ck_event_draw_count CHECK (draw_count > 0),
     CONSTRAINT ck_event_retry_count CHECK (retry_count >= 0),
@@ -89,7 +87,6 @@ CREATE TABLE lottery_user_quota (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (campaign_id, user_id),
-    CONSTRAINT fk_quota_campaign FOREIGN KEY (campaign_id) REFERENCES lottery_campaign (id),
     CONSTRAINT ck_quota_used_draws CHECK (used_draws >= 0)
 );
 
@@ -104,11 +101,9 @@ CREATE TABLE lottery_draw (
     prize_name VARCHAR(128) NOT NULL,
     won BOOLEAN NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_draw_event FOREIGN KEY (event_id) REFERENCES lottery_event (event_id),
-    CONSTRAINT fk_draw_campaign FOREIGN KEY (campaign_id) REFERENCES lottery_campaign (id),
-    CONSTRAINT fk_draw_prize FOREIGN KEY (prize_id) REFERENCES lottery_prize (id),
     CONSTRAINT uk_draw_event_sequence UNIQUE (event_id, draw_sequence),
     CONSTRAINT ck_draw_sequence CHECK (draw_sequence > 0)
 );
 
 CREATE INDEX idx_draw_campaign_user ON lottery_draw (campaign_id, user_id, created_at);
+CREATE INDEX idx_draw_prize ON lottery_draw (prize_id) WHERE prize_id IS NOT NULL;
