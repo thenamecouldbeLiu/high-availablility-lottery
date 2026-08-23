@@ -123,6 +123,13 @@ public class CampaignService {
         return withPrizes(getCampaignEntity(campaignId));
     }
 
+    @Transactional(readOnly = true)
+    public List<CampaignBo> getAvailableCampaigns() {
+        return campaignRepository.findAvailableCampaigns(java.time.Instant.now()).stream()
+                .map(this::withEnabledPrizes)
+                .toList();
+    }
+
     private void validateIfActive(CampaignBo campaign) {
         if (campaign.status() == CampaignStatus.ACTIVE) {
             validatePrizeConfiguration(campaign.id());
@@ -149,6 +156,15 @@ public class CampaignService {
                 base.maxDrawsPerUser(), base.startsAt(), base.endsAt(),
                 mapper.toPrizeBos(prizeRepository.findByCampaignIdAndDeletedFalseOrderByDisplayOrderAsc(
                         base.id())));
+    }
+
+    private CampaignBo withEnabledPrizes(LotteryCampaign entity) {
+        CampaignBo base = mapper.toBo(entity);
+        return new CampaignBo(base.id(), base.campaignCode(), base.name(), base.status(),
+                base.maxDrawsPerUser(), base.startsAt(), base.endsAt(),
+                mapper.toPrizeBos(
+                        prizeRepository.findByCampaignIdAndEnabledTrueAndDeletedFalseOrderByDisplayOrderAsc(
+                                base.id())));
     }
 
     private LotteryCampaign getCampaignEntity(Long id) {

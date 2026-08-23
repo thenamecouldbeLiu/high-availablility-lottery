@@ -4,6 +4,10 @@ import com.interview.lottory.controller.draw.dto.DrawAcceptedVo;
 import com.interview.lottory.controller.draw.dto.DrawEventStatusVo;
 import com.interview.lottory.controller.draw.dto.DrawItemResponseVo;
 import com.interview.lottory.controller.draw.dto.DrawRequest;
+import com.interview.lottory.controller.draw.dto.AvailableCampaignVo;
+import com.interview.lottory.controller.draw.dto.AvailablePrizeVo;
+import com.interview.lottory.service.campaign.dto.CampaignBo;
+import com.interview.lottory.service.campaign.dto.PrizeConfigBo;
 import com.interview.lottory.service.draw.dto.DrawAcceptedBo;
 import com.interview.lottory.service.draw.dto.DrawCommandBo;
 import com.interview.lottory.service.draw.dto.DrawEventStatusBo;
@@ -20,4 +24,7 @@ public interface DrawControllerMapper {
     DrawEventStatusVo toVo(DrawEventStatusBo bo);
     java.util.List<DrawEventStatusVo> toVos(java.util.List<DrawEventStatusBo> bos);
     DrawItemResponseVo toVo(DrawItemBo bo);
+    AvailableCampaignVo toAvailableVo(CampaignBo bo);
+    AvailablePrizeVo toAvailableVo(PrizeConfigBo bo);
+    java.util.List<AvailableCampaignVo> toAvailableVos(java.util.List<CampaignBo> bos);
 }

@@ -7,12 +7,23 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
+import java.util.List;
 import java.time.Instant;
 
 public interface LotteryCampaignRepository extends JpaRepository<LotteryCampaign, Long> {
     Optional<LotteryCampaign> findByIdAndDeletedFalse(Long id);
     Optional<LotteryCampaign> findByCampaignCodeAndDeletedFalse(String campaignCode);
     boolean existsByCampaignCodeAndDeletedFalse(String campaignCode);
+
+    @Query("""
+            select c from LotteryCampaign c
+             where c.status = com.interview.lottory.enums.CampaignStatus.ACTIVE
+               and c.deleted = false
+               and c.startsAt <= :now
+               and c.endsAt > :now
+             order by c.startsAt desc, c.id desc
+            """)
+    List<LotteryCampaign> findAvailableCampaigns(@Param("now") Instant now);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""

@@ -4,9 +4,11 @@ import com.interview.common.response.Response;
 import com.interview.lottory.controller.draw.dto.DrawAcceptedVo;
 import com.interview.lottory.controller.draw.dto.DrawEventStatusVo;
 import com.interview.lottory.controller.draw.dto.DrawRequest;
+import com.interview.lottory.controller.draw.dto.AvailableCampaignVo;
 import com.interview.lottory.controller.draw.mapper.DrawControllerMapper;
 import com.interview.lottory.service.draw.DrawEventQueryService;
 import com.interview.lottory.service.draw.DrawService;
+import com.interview.lottory.service.campaign.CampaignService;
 import com.interview.lottory.service.sse.DrawSseService;
 import com.interview.lottory.infra.security.CurrentUserUtil;
 import com.interview.lottory.infra.security.RequireCurrentUser;
@@ -30,7 +32,13 @@ public class DrawController {
     private final DrawService service;
     private final DrawEventQueryService queryService;
     private final DrawSseService sseService;
+    private final CampaignService campaignService;
     private final DrawControllerMapper mapper;
+
+    @GetMapping("/campaigns")
+    public Response<List<AvailableCampaignVo>> availableCampaigns() {
+        return Response.success(mapper.toAvailableVos(campaignService.getAvailableCampaigns()));
+    }
 
     @PostMapping("/draw")
     public ResponseEntity<Response<DrawAcceptedVo>> draw(@Valid @RequestBody DrawRequest request) {
