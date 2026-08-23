@@ -5,6 +5,7 @@ import com.interview.common.response.Response;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
@@ -24,19 +25,19 @@ public class SecurityErrorHandler implements AuthenticationEntryPoint, AccessDen
     }
 
     @Override
-    public void commence(HttpServletRequest request, HttpServletResponse response,
-                         AuthenticationException exception) throws IOException, ServletException {
+    public void commence(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
+                         @NonNull AuthenticationException exception) throws IOException, ServletException {
         write(response, request, ErrorCode.AUTHENTICATION_REQUIRED, "Authentication is required");
     }
 
     @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response,
-                       AccessDeniedException exception) throws IOException, ServletException {
+    public void handle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
+                       @NonNull AccessDeniedException exception) throws IOException, ServletException {
         write(response, request, ErrorCode.ACCESS_DENIED, "Access is denied");
     }
 
-    private void write(HttpServletResponse response, HttpServletRequest request,
-                       ErrorCode errorCode, String message) throws IOException {
+    private void write(HttpServletResponse response, @NonNull HttpServletRequest request,
+                       @NonNull ErrorCode errorCode, @NonNull String message) throws IOException {
         response.setStatus(errorCode.getHttpStatus());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         objectMapper.writeValue(response.getOutputStream(),

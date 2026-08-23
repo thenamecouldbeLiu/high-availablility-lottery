@@ -1,14 +1,14 @@
 spring:
   application:
-    name: lottory
+    name: lottery
   messages:
     basename: i18n/messages
     encoding: UTF-8
     fallback-to-system-locale: false
   datasource:
-    url: "${DB_URL:jdbc:postgresql://localhost:5432/lottory}"
-    username: "${DB_USERNAME:lottory}"
-    password: "${DB_PASSWORD:lottory}"
+    url: "${DB_URL:jdbc:postgresql://localhost:5432/lottery}"
+    username: "${DB_USERNAME:lottery}"
+    password: "${DB_PASSWORD:lottery}"
     hikari:
       maximum-pool-size: ${DB_POOL_MAX_SIZE:20}
       minimum-idle: ${DB_POOL_MIN_IDLE:5}
@@ -56,6 +56,23 @@ spring:
           max-idle: ${REDIS_POOL_MAX_IDLE:16}
           min-idle: ${REDIS_POOL_MIN_IDLE:4}
           max-wait: "${REDIS_POOL_MAX_WAIT:2s}"
+
+springdoc:
+  api-docs:
+    enabled: ${SWAGGER_API_DOCS_ENABLED:true}
+    path: /api-docs
+  swagger-ui:
+    enabled: ${SWAGGER_UI_ENABLED:true}
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+    filter: true
+    try-it-out-enabled: true
+    disable-swagger-default-url: true
+  packages-to-scan: com.interview.lottory.controller
+  paths-to-match: /api/**
+  show-actuator: false
 
 management:
   endpoint:

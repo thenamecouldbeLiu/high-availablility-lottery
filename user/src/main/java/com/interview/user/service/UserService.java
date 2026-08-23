@@ -6,9 +6,8 @@ import com.interview.user.controller.dto.CreateUserRequest;
 import com.interview.user.controller.dto.UpdateUserRequest;
 import com.interview.user.controller.dto.UserResponse;
 import com.interview.user.domain.User;
-import com.interview.user.infra.security.AuthenticatedUser;
-import com.interview.user.infra.security.UserRequestContext;
 import com.interview.user.repository.UserRepository;
+import com.interview.user.utils.UserUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -41,7 +40,7 @@ public class UserService {
     }
 
     public UserResponse getCurrent() {
-        String subject = UserRequestContext.requireCurrent().subject();
+        String subject = UserUtil.currentSubject();
         return repository.findByKeycloakSubject(subject)
                 .map(UserResponse::from)
                 .orElseThrow(() -> new InterviewException(ErrorCode.USER_NOT_FOUND));
@@ -74,8 +73,7 @@ public class UserService {
     }
 
     private void assertCanRead(User user) {
-        AuthenticatedUser current = UserRequestContext.requireCurrent();
-        if (!current.isAdmin() && !user.getKeycloakSubject().equals(current.subject())) {
+        if (!UserUtil.isAdmin() && !user.getKeycloakSubject().equals(UserUtil.currentSubject())) {
             throw new InterviewException(ErrorCode.ACCESS_DENIED);
         }
     }
