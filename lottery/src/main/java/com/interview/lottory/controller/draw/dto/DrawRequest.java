@@ -8,6 +8,5 @@ import jakarta.validation.constraints.Size;
 public record DrawRequest(
         @NotBlank @Size(max = 128) String requestId,
         @NotNull Long campaignId,
-        @NotBlank @Size(max = 128) String userId,
         @Min(1) int drawCount) {
 }

@@ -8,10 +8,11 @@ import com.interview.lottory.controller.draw.mapper.DrawControllerMapper;
 import com.interview.lottory.service.draw.DrawEventQueryService;
 import com.interview.lottory.service.draw.DrawService;
 import com.interview.lottory.service.sse.DrawSseService;
+import com.interview.lottory.infra.security.CurrentUserUtil;
+import com.interview.lottory.infra.security.RequireCurrentUser;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/lottery")
 @RequiredArgsConstructor
+@RequireCurrentUser(roles = {"ADMIN", "NORMAL_USER"})
 public class DrawController {
     private final DrawService service;
     private final DrawEventQueryService queryService;
@@ -33,26 +35,28 @@ public class DrawController {
     @PostMapping("/draw")
     public ResponseEntity<Response<DrawAcceptedVo>> draw(@Valid @RequestBody DrawRequest request) {
         return ResponseEntity.accepted()
-                .body(Response.success(mapper.toVo(service.submit(mapper.toBo(request)))));
+                .body(Response.success(mapper.toVo(service.submit(
+                        mapper.toBo(request, CurrentUserUtil.currentSubject())))));
     }
 
     @GetMapping(value = "/events/{eventId}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter stream(@PathVariable UUID eventId, @RequestParam @NotBlank String userId) {
-        return sseService.subscribe(eventId, userId);
+    public SseEmitter stream(@PathVariable UUID eventId) {
+        return sseService.subscribe(eventId, CurrentUserUtil.currentSubject());
     }
 
     @GetMapping("/events/{eventId}")
     public Response<DrawEventStatusVo> event(
-            @PathVariable UUID eventId, @RequestParam @NotBlank String userId) {
-        return Response.success(mapper.toVo(queryService.getEventByEventIdAndUserId(eventId, userId)));
+            @PathVariable UUID eventId) {
+        return Response.success(mapper.toVo(
+                queryService.getEventByEventIdAndUserId(eventId, CurrentUserUtil.currentSubject())));
     }
 
-    @GetMapping("/users/{userId}/draws")
+    @GetMapping("/users/me/draws")
     public Response<List<DrawEventStatusVo>> history(
-            @PathVariable @NotBlank String userId,
             @RequestParam(required = false) Long campaignId,
             @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
         return Response.success(
-                mapper.toVos(queryService.getUserEventHistoryByCampaignId(userId, campaignId, limit)));
+                mapper.toVos(queryService.getUserEventHistoryByCampaignId(
+                        CurrentUserUtil.currentSubject(), campaignId, limit)));
     }
 }

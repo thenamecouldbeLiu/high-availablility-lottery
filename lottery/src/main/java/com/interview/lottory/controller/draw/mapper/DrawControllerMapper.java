@@ -9,11 +9,13 @@ import com.interview.lottory.service.draw.dto.DrawCommandBo;
 import com.interview.lottory.service.draw.dto.DrawEventStatusBo;
 import com.interview.lottory.service.draw.dto.DrawItemBo;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface DrawControllerMapper {
-    DrawCommandBo toBo(DrawRequest request);
+    @Mapping(target = "userId", source = "userId")
+    DrawCommandBo toBo(DrawRequest request, String userId);
     DrawAcceptedVo toVo(DrawAcceptedBo bo);
     DrawEventStatusVo toVo(DrawEventStatusBo bo);
     java.util.List<DrawEventStatusVo> toVos(java.util.List<DrawEventStatusBo> bos);

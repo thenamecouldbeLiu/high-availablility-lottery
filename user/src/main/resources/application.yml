@@ -1,3 +1,6 @@
+server:
+  port: ${USER_SERVER_PORT:8082}
+
 spring:
   application:
     name: user
@@ -26,7 +29,7 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: "${KEYCLOAK_ISSUER_URI:http://localhost:8081/realms/lottery}"
-          audiences: "${KEYCLOAK_AUDIENCE:user-service}"
+          audiences: "${USER_KEYCLOAK_AUDIENCE:user-service}"
       client:
         provider:
           keycloak:
@@ -34,8 +37,8 @@ spring:
         registration:
           keycloak-backend:
             provider: keycloak
-            client-id: "${KEYCLOAK_BACKEND_CLIENT_ID:user-service}"
-            client-secret: "${KEYCLOAK_BACKEND_CLIENT_SECRET:change-me}"
+            client-id: "${USER_KEYCLOAK_CLIENT_ID:user-service}"
+            client-secret: "${USER_KEYCLOAK_CLIENT_SECRET:change-me}"
             client-authentication-method: client_secret_basic
             authorization-grant-type: client_credentials
             scope: openid
@@ -54,9 +57,9 @@ app:
   keycloak:
     backend:
       registration-id: keycloak-backend
-      client-id: "${KEYCLOAK_BACKEND_CLIENT_ID:user-service}"
+      client-id: "${USER_KEYCLOAK_CLIENT_ID:user-service}"
     frontend:
-      client-id: "${KEYCLOAK_FRONTEND_CLIENT_ID:lottery-web}"
+      client-id: "${FRONTEND_KEYCLOAK_CLIENT_ID:lottery-web}"
       authorization-uri: "${KEYCLOAK_AUTHORIZATION_URI:http://localhost:8081/realms/lottery/protocol/openid-connect/auth}"
       token-uri: "${KEYCLOAK_TOKEN_URI:http://localhost:8081/realms/lottery/protocol/openid-connect/token}"
       redirect-uri: "${KEYCLOAK_FRONTEND_REDIRECT_URI:http://localhost:3000/callback}"

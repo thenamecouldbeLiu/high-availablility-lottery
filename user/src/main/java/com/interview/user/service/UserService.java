@@ -35,12 +35,14 @@ public class UserService {
         return UserResponse.from(repository.save(user));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'NORMAL_USER')")
     public UserResponse get(UUID id) {
         User user = find(id);
         assertCanRead(user);
         return UserResponse.from(user);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'NORMAL_USER')")
     @Transactional
     public UserResponse getOrCreateCurrentUser() {
         AuthenticatedUser currentUser = UserUtil.requireCurrentUser();

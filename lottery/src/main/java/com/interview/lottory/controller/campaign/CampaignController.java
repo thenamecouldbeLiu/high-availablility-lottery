@@ -4,6 +4,7 @@ import com.interview.common.response.Response;
 import com.interview.lottory.controller.campaign.dto.*;
 import com.interview.lottory.controller.campaign.mapper.CampaignControllerMapper;
 import com.interview.lottory.service.campaign.CampaignService;
+import com.interview.lottory.infra.security.RequireCurrentUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/admin/campaigns")
 @RequiredArgsConstructor
+@RequireCurrentUser(roles = "ADMIN")
 public class CampaignController {
     private final CampaignService service;
     private final CampaignControllerMapper mapper;
