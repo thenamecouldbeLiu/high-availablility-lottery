@@ -1,0 +1,82 @@
+services:
+
+  postgres:
+    image: postgres:17
+    container_name: lottery-postgres
+
+    environment:
+      POSTGRES_DB: lottery
+      POSTGRES_USER: lottery
+      POSTGRES_PASSWORD: lottery
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init-keycloak.sql:/docker-entrypoint-initdb.d/init.sql
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lottery -d lottery"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+
+  redis:
+    image: redis:8
+    container_name: lottery-redis
+
+    ports:
+      - "6379:6379"
+
+    volumes:
+      - redis-data:/data
+
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4
+    container_name: lottery-keycloak
+
+    command: start-dev --import-realm
+
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+
+    ports:
+      - "8081:8080"
+
+    volumes:
+      - ./keycloak-export:/opt/keycloak/data/import
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: lottery-rabbitmq
+
+    environment:
+      RABBITMQ_DEFAULT_USER: lottery
+      RABBITMQ_DEFAULT_PASS: lottery
+
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+
+volumes:
+  postgres-data:
+  redis-data:
+  rabbitmq-data:
