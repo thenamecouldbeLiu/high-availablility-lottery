@@ -35,8 +35,8 @@ public class KeycloakConfig {
     }
 
     @Bean
-    RestClient keycloakAdminRestClient(RestClient.Builder builder, KeycloakProperties properties) {
-        return builder.baseUrl(properties.backend().adminBaseUri()).build();
+    RestClient keycloakAdminRestClient(KeycloakProperties properties) {
+        return RestClient.builder().baseUrl(properties.backend().adminBaseUri()).build();
     }
 
     @Bean

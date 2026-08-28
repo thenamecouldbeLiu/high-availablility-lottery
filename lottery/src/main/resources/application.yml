@@ -1,5 +1,7 @@
 server:
   port: ${LOTTERY_SERVER_PORT:8080}
+  http2:
+    enabled: ${HTTP2_ENABLED:true}
 
 spring:
   application:
@@ -105,6 +107,7 @@ app:
     client-id: "${LOTTERY_KEYCLOAK_CLIENT_ID:lottery-service}"
   user-service:
     base-url: "${USER_SERVICE_BASE_URL:http://localhost:8082}"
+    http2-enabled: ${USER_SERVICE_HTTP2_ENABLED:true}
   swagger:
     oauth2:
       authorization-url: "${KEYCLOAK_AUTHORIZATION_URI:http://localhost:8081/realms/lottery/protocol/openid-connect/auth}"
