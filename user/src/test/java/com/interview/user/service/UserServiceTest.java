@@ -2,7 +2,6 @@ package com.interview.user.service;
 
 import com.interview.common.exception.InterviewException;
 import com.interview.user.domain.User;
-import com.interview.user.domain.UserRole;
 import com.interview.user.infra.security.AuthenticatedUser;
 import com.interview.user.infra.security.UserRequestContext;
 import com.interview.user.repository.UserRepository;
@@ -78,26 +77,12 @@ class UserServiceTest {
         assertThat(response.username()).isEqualTo("alice");
         assertThat(response.email()).isEqualTo("alice@example.com");
         assertThat(response.displayName()).isEqualTo("alice");
-        assertThat(response.roles()).containsExactly(UserRole.ADMIN);
         assertThat(response.enabled()).isTrue();
         verify(repository).save(org.mockito.ArgumentMatchers.any(User.class));
     }
 
-    @Test
-    void getCurrentCreatesUserWithEveryRoleFromToken() {
-        when(repository.findByKeycloakSubject("new-sub")).thenReturn(Optional.empty());
-        when(repository.save(org.mockito.ArgumentMatchers.any(User.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-        UserRequestContext.set(new AuthenticatedUser("new-sub", "alice", "alice@example.com",
-                Set.of("ADMIN", "NORMAL_USER")));
-
-        var response = service.getOrCreateCurrentUser();
-
-        assertThat(response.roles()).containsExactlyInAnyOrder(UserRole.ADMIN, UserRole.NORMAL_USER);
-    }
-
     private User user(String subject) {
         return new User(subject, subject, subject + "@example.com", subject,
-                Set.of(UserRole.NORMAL_USER), true);
+                true);
     }
 }

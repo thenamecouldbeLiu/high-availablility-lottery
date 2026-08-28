@@ -6,7 +6,6 @@ import com.interview.user.controller.dto.CreateUserRequest;
 import com.interview.user.controller.dto.UpdateUserRequest;
 import com.interview.user.controller.dto.UserResponse;
 import com.interview.user.domain.User;
-import com.interview.user.domain.UserRole;
 import com.interview.user.infra.security.AuthenticatedUser;
 import com.interview.user.repository.UserRepository;
 import com.interview.user.utils.UserUtil;
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -32,7 +30,7 @@ public class UserService {
     @Transactional
     public UserResponse create(CreateUserRequest request) {
         User user = new User(request.keycloakSubject(), request.username(), request.email(),
-                request.displayName(), request.roles(), request.enabled());
+                request.displayName(), request.enabled());
         return UserResponse.from(repository.save(user));
     }
 
@@ -54,9 +52,6 @@ public class UserService {
                         currentUser.username(),
                         currentUser.email(),
                         currentUser.username(),
-                        currentUser.roles().stream()
-                                .map(UserRole::valueOf)
-                                .collect(Collectors.toUnmodifiableSet()),
                         true))));
     }
 
@@ -71,7 +66,7 @@ public class UserService {
     public UserResponse update(UUID id, UpdateUserRequest request) {
         User user = find(id);
         user.update(request.username(), request.email(), request.displayName(),
-                request.roles(), request.enabled());
+                request.enabled());
         return UserResponse.from(user);
     }
 
