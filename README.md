@@ -64,3 +64,26 @@ Content-Type: application/json
 Keycloak. The endpoint only manages the application realm roles `ADMIN` and `NORMAL_USER`; unrelated Keycloak roles
 are preserved. The `user-service` service account requires the `realm-management` client roles `manage-users`,
 `view-users`, and `view-realm`. These roles are included in the local realm export.
+
+5. Initialize example campaigns
+
+The [campaign request file](init-service/campaign-requests.http) creates and activates two example campaigns:
+
+- `ANNIVERSARY_2026`: 2026 anniversary lottery with a maximum of five draws per user.
+- `MID_AUTUMN_2026`: 2026 Mid-Autumn lottery with a maximum of three draws per user.
+
+Each campaign contains exactly three prizes and one no-prize item. The enabled prize probabilities add up to `1.0`,
+which is required by `CampaignService` before a campaign can be activated.
+
+To initialize the campaigns:
+
+1. Start PostgreSQL, Keycloak, the user service, and the lottery service.
+2. Sign in as `lottery_admin` and obtain an access token containing the `ADMIN` role. The default password in the
+   development realm is `password`.
+3. Open `init-service/campaign-requests.http` in IntelliJ IDEA.
+4. Replace `replace-with-admin-access-token` in the `adminToken` variable with the access token.
+5. Run all requests from top to bottom. The file automatically captures both campaign IDs from the create responses.
+6. Run the final `GET /api/lottery/campaigns` request to verify both active campaigns.
+
+The campaign codes are unique. Running the create requests again against the same database returns a duplicate-request
+error; delete the existing campaigns or change the campaign codes before rerunning them.

@@ -1,0 +1,174 @@
+@lotteryBaseUrl = http://localhost:8080
+@adminToken = replace-with-admin-access-token
+
+### 1. Create anniversary campaign
+POST {{lotteryBaseUrl}}/api/admin/campaigns
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "campaignCode": "ANNIVERSARY_2026",
+  "name": "2026 週年慶幸運抽獎",
+  "maxDrawsPerUser": 5,
+  "startsAt": "2026-01-01T00:00:00Z",
+  "endsAt": "2030-12-31T23:59:59Z"
+}
+
+> {%
+    client.test("Anniversary campaign was created", function () {
+        client.assert(response.status === 201, "Expected HTTP 201");
+    });
+    client.global.set("anniversaryCampaignId", response.body.data.id);
+%}
+
+### 2. Anniversary first prize
+POST {{lotteryBaseUrl}}/api/admin/campaigns/{{anniversaryCampaignId}}/prizes
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "prizeCode": "ANNIVERSARY_IPHONE",
+  "name": "iPhone",
+  "prizeType": "PRIZE",
+  "probability": 0.01,
+  "totalStock": 10,
+  "displayOrder": 1,
+  "enabled": true
+}
+
+### 3. Anniversary second prize
+POST {{lotteryBaseUrl}}/api/admin/campaigns/{{anniversaryCampaignId}}/prizes
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "prizeCode": "ANNIVERSARY_AIRPODS",
+  "name": "AirPods",
+  "prizeType": "PRIZE",
+  "probability": 0.04,
+  "totalStock": 40,
+  "displayOrder": 2,
+  "enabled": true
+}
+
+### 4. Anniversary third prize
+POST {{lotteryBaseUrl}}/api/admin/campaigns/{{anniversaryCampaignId}}/prizes
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "prizeCode": "ANNIVERSARY_COUPON",
+  "name": "NT$100 購物金",
+  "prizeType": "PRIZE",
+  "probability": 0.15,
+  "totalStock": 500,
+  "displayOrder": 3,
+  "enabled": true
+}
+
+### 5. Anniversary no-prize item
+POST {{lotteryBaseUrl}}/api/admin/campaigns/{{anniversaryCampaignId}}/prizes
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "prizeCode": "ANNIVERSARY_NO_PRIZE",
+  "name": "銘謝惠顧",
+  "prizeType": "NO_PRIZE",
+  "probability": 0.80,
+  "totalStock": 0,
+  "displayOrder": 4,
+  "enabled": true
+}
+
+### 6. Activate anniversary campaign
+POST {{lotteryBaseUrl}}/api/admin/campaigns/{{anniversaryCampaignId}}/activate
+Authorization: Bearer {{adminToken}}
+
+### 7. Create Mid-Autumn campaign
+POST {{lotteryBaseUrl}}/api/admin/campaigns
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "campaignCode": "MID_AUTUMN_2026",
+  "name": "2026 中秋好禮抽獎",
+  "maxDrawsPerUser": 3,
+  "startsAt": "2026-01-01T00:00:00Z",
+  "endsAt": "2030-12-31T23:59:59Z"
+}
+
+> {%
+    client.test("Mid-Autumn campaign was created", function () {
+        client.assert(response.status === 201, "Expected HTTP 201");
+    });
+    client.global.set("midAutumnCampaignId", response.body.data.id);
+%}
+
+### 8. Mid-Autumn first prize
+POST {{lotteryBaseUrl}}/api/admin/campaigns/{{midAutumnCampaignId}}/prizes
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "prizeCode": "MID_AUTUMN_TV",
+  "name": "65 吋智慧電視",
+  "prizeType": "PRIZE",
+  "probability": 0.005,
+  "totalStock": 5,
+  "displayOrder": 1,
+  "enabled": true
+}
+
+### 9. Mid-Autumn second prize
+POST {{lotteryBaseUrl}}/api/admin/campaigns/{{midAutumnCampaignId}}/prizes
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "prizeCode": "MID_AUTUMN_GIFT_BOX",
+  "name": "精品月餅禮盒",
+  "prizeType": "PRIZE",
+  "probability": 0.025,
+  "totalStock": 50,
+  "displayOrder": 2,
+  "enabled": true
+}
+
+### 10. Mid-Autumn third prize
+POST {{lotteryBaseUrl}}/api/admin/campaigns/{{midAutumnCampaignId}}/prizes
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "prizeCode": "MID_AUTUMN_COUPON",
+  "name": "NT$200 購物金",
+  "prizeType": "PRIZE",
+  "probability": 0.10,
+  "totalStock": 300,
+  "displayOrder": 3,
+  "enabled": true
+}
+
+### 11. Mid-Autumn no-prize item
+POST {{lotteryBaseUrl}}/api/admin/campaigns/{{midAutumnCampaignId}}/prizes
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "prizeCode": "MID_AUTUMN_NO_PRIZE",
+  "name": "銘謝惠顧",
+  "prizeType": "NO_PRIZE",
+  "probability": 0.87,
+  "totalStock": 0,
+  "displayOrder": 4,
+  "enabled": true
+}
+
+### 12. Activate Mid-Autumn campaign
+POST {{lotteryBaseUrl}}/api/admin/campaigns/{{midAutumnCampaignId}}/activate
+Authorization: Bearer {{adminToken}}
+
+### 13. Verify both campaigns are available
+GET {{lotteryBaseUrl}}/api/lottery/campaigns
+Authorization: Bearer {{adminToken}}
