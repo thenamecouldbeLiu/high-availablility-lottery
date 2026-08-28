@@ -78,4 +78,8 @@ public class User {
         this.displayName = displayName;
         this.enabled = enabled;
     }
+
+    public void syncFromKeycloak(String username, String email, String displayName, boolean enabled) {
+        update(username, email, displayName, enabled);
+    }
 }

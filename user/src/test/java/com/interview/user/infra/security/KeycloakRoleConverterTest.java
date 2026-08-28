@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class KeycloakRoleConverterTest {
     private final KeycloakRoleConverter converter = new KeycloakRoleConverter(
             new KeycloakProperties(
-                    new KeycloakProperties.Backend("keycloak-backend", "user-service"),
+                    new KeycloakProperties.Backend("keycloak-backend", "user-service", null),
                     new KeycloakProperties.Frontend(null, null, null, null, null, null)));
 
     @Test

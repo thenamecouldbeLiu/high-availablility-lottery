@@ -77,6 +77,7 @@ app:
     backend:
       registration-id: keycloak-backend
       client-id: "${USER_KEYCLOAK_CLIENT_ID:user-service}"
+      admin-base-uri: "${KEYCLOAK_ADMIN_BASE_URI:http://localhost:8081/admin/realms/lottery}"
     frontend:
       client-id: "${FRONTEND_KEYCLOAK_CLIENT_ID:lottery-web}"
       authorization-uri: "${KEYCLOAK_AUTHORIZATION_URI:http://localhost:8081/realms/lottery/protocol/openid-connect/auth}"

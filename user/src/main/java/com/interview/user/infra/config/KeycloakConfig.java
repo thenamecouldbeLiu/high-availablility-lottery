@@ -12,12 +12,33 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
+import org.springframework.security.oauth2.client.*;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.client.RestClient;
 
 @Configuration
 @EnableMethodSecurity
 @EnableConfigurationProperties(KeycloakProperties.class)
 public class KeycloakConfig {
+    @Bean
+    OAuth2AuthorizedClientManager keycloakAuthorizedClientManager(
+            ClientRegistrationRepository registrations,
+            OAuth2AuthorizedClientService authorizedClientService) {
+        OAuth2AuthorizedClientProvider provider = OAuth2AuthorizedClientProviderBuilder.builder()
+                .clientCredentials()
+                .build();
+        var manager = new AuthorizedClientServiceOAuth2AuthorizedClientManager(
+                registrations, authorizedClientService);
+        manager.setAuthorizedClientProvider(provider);
+        return manager;
+    }
+
+    @Bean
+    RestClient keycloakAdminRestClient(RestClient.Builder builder, KeycloakProperties properties) {
+        return builder.baseUrl(properties.backend().adminBaseUri()).build();
+    }
+
     @Bean
     SecurityFilterChain securityFilterChain(
             HttpSecurity http,

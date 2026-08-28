@@ -4,7 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "app.keycloak")
 public record KeycloakProperties(Backend backend, Frontend frontend) {
-    public record Backend(String registrationId, String clientId) {
+    public record Backend(String registrationId, String clientId, String adminBaseUri) {
     }
 
     public record Frontend(

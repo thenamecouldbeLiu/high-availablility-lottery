@@ -33,6 +33,9 @@ public final class ErrorCode {
     public static final ErrorCode DATABASE_OPERATION_FAILED =
             new ErrorCode("DATABASE_OPERATION_FAILED", ErrorType.INFRASTRUCTURE, 503,
                     "error.database-operation-failed");
+    public static final ErrorCode KEYCLOAK_OPERATION_FAILED =
+            new ErrorCode("KEYCLOAK_OPERATION_FAILED", ErrorType.INFRASTRUCTURE, 502,
+                    "error.keycloak-operation-failed");
     public static final ErrorCode INTERNAL_ERROR =
             new ErrorCode("INTERNAL_ERROR", ErrorType.INTERNAL, 500, "error.internal");
 

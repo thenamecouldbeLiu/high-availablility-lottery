@@ -24,7 +24,7 @@ To start the services, you can use the following commands:
      - ./mvnw spring-boot:run
    
    for more engineering method, you can directly call dev.sh in your VM or cloud env.
-4. Default keycloak admin user
+4. Keycloak and user related service
 The default Keycloak admin user for master realm is:
 - Username: admin
 - Password: admin
@@ -32,5 +32,35 @@ The default Keycloak admin user for lottery realm is:
 - Username: lottery_admin
 - Password: password
 
-for all new established users, they are assigned a default role of "NORMAL_USER" in the lottery realm. 
-You can manage user roles and permissions through the Keycloak admin console.
+For all new established users, they are assigned a default role of "NORMAL_USER" in the lottery realm.
+You can manage user roles and permissions through the Keycloak admin console or admin api provided in user service.
+The project saves user and keycloak id information to db for future extension of user info and prevents the dependency
+toward keycloak (but not exactly add other tables as other information of user in this project).
+
+### Update a Keycloak user
+
+An administrator can update Keycloak identity data and the corresponding local searchable user data with:
+
+```http
+PUT /api/keycloak/users/{keycloakUserId}
+Authorization: Bearer <admin-access-token>
+Content-Type: application/json
+
+{
+  "username": "alice",
+  "email": "alice@example.com",
+  "firstName": "Alice",
+  "lastName": "Chen",
+  "displayName": "Alice Chen",
+  "enabled": true,
+  "roles": ["NORMAL_USER"],
+  "attributes": {
+    "locale": ["zh-TW"]
+  }
+}
+```
+
+`username`, `email`, `displayName`, and `enabled` are also updated in `app_user`. Roles remain exclusively in
+Keycloak. The endpoint only manages the application realm roles `ADMIN` and `NORMAL_USER`; unrelated Keycloak roles
+are preserved. The `user-service` service account requires the `realm-management` client roles `manage-users`,
+`view-users`, and `view-realm`. These roles are included in the local realm export.

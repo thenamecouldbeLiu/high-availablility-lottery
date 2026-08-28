@@ -449,6 +449,9 @@
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],
     "realmRoles" : [ "default-roles-lottery" ],
+    "clientRoles" : {
+      "realm-management" : [ "manage-users", "view-users", "view-realm" ]
+    },
     "notBefore" : 0,
     "groups" : [ ]
   } ],
