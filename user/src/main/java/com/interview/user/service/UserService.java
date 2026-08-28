@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -31,7 +32,7 @@ public class UserService {
     @Transactional
     public UserResponse create(CreateUserRequest request) {
         User user = new User(request.keycloakSubject(), request.username(), request.email(),
-                request.displayName(), request.role(), request.enabled());
+                request.displayName(), request.roles(), request.enabled());
         return UserResponse.from(repository.save(user));
     }
 
@@ -53,7 +54,9 @@ public class UserService {
                         currentUser.username(),
                         currentUser.email(),
                         currentUser.username(),
-                        currentUser.isAdmin() ? UserRole.ADMIN : UserRole.NORMAL_USER,
+                        currentUser.roles().stream()
+                                .map(UserRole::valueOf)
+                                .collect(Collectors.toUnmodifiableSet()),
                         true))));
     }
 
@@ -68,7 +71,7 @@ public class UserService {
     public UserResponse update(UUID id, UpdateUserRequest request) {
         User user = find(id);
         user.update(request.username(), request.email(), request.displayName(),
-                request.role(), request.enabled());
+                request.roles(), request.enabled());
         return UserResponse.from(user);
     }
 

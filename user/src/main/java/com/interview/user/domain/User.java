@@ -4,6 +4,9 @@ import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.*;
 
 import java.time.Instant;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -25,9 +28,11 @@ public class User {
     @Column(name = "display_name", length = 150)
     private String displayName;
 
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id"))
     @Enumerated(EnumType.STRING)
-    @Column(name = "user_role", nullable = false, length = 30)
-    private UserRole role;
+    @Column(name = "role", nullable = false, length = 30)
+    private Set<UserRole> roles = EnumSet.noneOf(UserRole.class);
 
     @Column(nullable = false)
     private boolean enabled;
@@ -46,12 +51,12 @@ public class User {
     }
 
     public User(String keycloakSubject, String username, String email,
-                String displayName, UserRole role, boolean enabled) {
+                String displayName, Set<UserRole> roles, boolean enabled) {
         this.keycloakSubject = keycloakSubject;
         this.username = username;
         this.email = email;
         this.displayName = displayName;
-        this.role = role;
+        replaceRoles(roles);
         this.enabled = enabled;
     }
 
@@ -70,12 +75,20 @@ public class User {
         updatedAt = Instant.now();
     }
 
-    public void update(String username, String email, String displayName, UserRole role, boolean enabled) {
+    public void update(String username, String email, String displayName, Set<UserRole> roles, boolean enabled) {
         this.username = username;
         this.email = email;
         this.displayName = displayName;
-        this.role = role;
+        replaceRoles(roles);
         this.enabled = enabled;
+    }
+
+    private void replaceRoles(Set<UserRole> roles) {
+        if (roles == null || roles.isEmpty()) {
+            throw new IllegalArgumentException("User must have at least one role");
+        }
+        this.roles.clear();
+        this.roles.addAll(roles);
     }
 
     public UUID getId() { return id; }
@@ -83,7 +96,7 @@ public class User {
     public String getUsername() { return username; }
     public String getEmail() { return email; }
     public String getDisplayName() { return displayName; }
-    public UserRole getRole() { return role; }
+    public Set<UserRole> getRoles() { return Collections.unmodifiableSet(roles); }
     public boolean isEnabled() { return enabled; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }

@@ -4,6 +4,7 @@ import com.interview.user.domain.User;
 import com.interview.user.domain.UserRole;
 
 import java.time.Instant;
+import java.util.Set;
 import java.util.UUID;
 
 public record UserResponse(
@@ -12,14 +13,14 @@ public record UserResponse(
         String username,
         String email,
         String displayName,
-        UserRole role,
+        Set<UserRole> roles,
         boolean enabled,
         Instant createdAt,
         Instant updatedAt
 ) {
     public static UserResponse from(User user) {
         return new UserResponse(user.getId(), user.getKeycloakSubject(), user.getUsername(),
-                user.getEmail(), user.getDisplayName(), user.getRole(), user.isEnabled(),
+                user.getEmail(), user.getDisplayName(), Set.copyOf(user.getRoles()), user.isEnabled(),
                 user.getCreatedAt(), user.getUpdatedAt());
     }
 }
