@@ -2,23 +2,29 @@ package com.interview.user.domain;
 
 import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.Instant;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.UUID;
 
 @Entity
 @Table(name = "app_user")
+@Getter
+@Setter
 public class User {
+    @Getter
     @Id
     @Column(nullable = false, updatable = false)
     private UUID id;
 
+    @Getter
     @Column(name = "keycloak_subject", nullable = false, unique = true, updatable = false)
     private String keycloakSubject;
 
+    @Getter
     @Column(nullable = false, unique = true, length = 100)
     private String username;
 
@@ -90,15 +96,4 @@ public class User {
         this.roles.clear();
         this.roles.addAll(roles);
     }
-
-    public UUID getId() { return id; }
-    public String getKeycloakSubject() { return keycloakSubject; }
-    public String getUsername() { return username; }
-    public String getEmail() { return email; }
-    public String getDisplayName() { return displayName; }
-    public Set<UserRole> getRoles() { return Collections.unmodifiableSet(roles); }
-    public boolean isEnabled() { return enabled; }
-    public Instant getCreatedAt() { return createdAt; }
-    public Instant getUpdatedAt() { return updatedAt; }
-    public long getVersion() { return version; }
 }
