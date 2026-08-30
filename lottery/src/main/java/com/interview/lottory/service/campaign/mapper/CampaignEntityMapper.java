@@ -13,7 +13,10 @@ import java.util.List;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface CampaignEntityMapper {
+    @Mapping(target = "id", source = "id")
     CampaignBo toBo(LotteryCampaign entity);
+
+    @Mapping(target = "id", source = "id")
     PrizeConfigBo toBo(LotteryPrize entity);
     List<PrizeConfigBo> toPrizeBos(List<LotteryPrize> entities);
 

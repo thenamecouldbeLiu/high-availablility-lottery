@@ -17,6 +17,9 @@ public interface CampaignControllerMapper {
     @Mapping(target = "remainingStock", source = "totalStock")
     PrizeConfigBo toBo(PrizeConfigRequest request);
 
+    @Mapping(target = "id", source = "id")
     CampaignResponseVo toVo(CampaignBo bo);
+
+    @Mapping(target = "id", source = "id")
     PrizeResponseVo toVo(PrizeConfigBo bo);
 }

@@ -1,5 +1,11 @@
 package com.interview.lottory.controller.draw.dto;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-public record DrawItemResponseVo(int sequence, Long prizeId, String prizeCode,
-                                 String prizeName, boolean won) {
+@Schema(description = "單次抽獎結果")
+public record DrawItemResponseVo(
+        @Schema(example = "1") int sequence,
+        @Schema(example = "987654321", nullable = true) Long prizeId,
+        @Schema(example = "ANNIVERSARY_IPHONE") String prizeCode,
+        @Schema(example = "iPhone") String prizeName,
+        @Schema(example = "true") boolean won) {
 }
