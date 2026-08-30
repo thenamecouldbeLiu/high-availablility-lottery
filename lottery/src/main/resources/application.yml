@@ -121,6 +121,7 @@ app:
       idempotency-ttl: "${DRAW_IDEMPOTENCY_TTL:24h}"
       result-ttl: "${DRAW_RESULT_TTL:24h}"
       stock-reservation-ttl: "${DRAW_STOCK_RESERVATION_TTL:10m}"
+      stock-reservation-cleanup-interval: "${DRAW_STOCK_RESERVATION_CLEANUP_INTERVAL:1m}"
       sse-timeout: "${DRAW_SSE_TIMEOUT:5m}"
       sse-poll-interval: "${DRAW_SSE_POLL_INTERVAL:500ms}"
   messaging:
