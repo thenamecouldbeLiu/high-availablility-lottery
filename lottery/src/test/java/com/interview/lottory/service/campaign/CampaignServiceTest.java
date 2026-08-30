@@ -44,7 +44,10 @@ class CampaignServiceTest {
         when(prizes.findByCampaignIdAndDeletedFalseOrderByDisplayOrderAsc(1L)).thenReturn(List.of());
         when(mapper.toPrizeBos(List.of())).thenReturn(List.of());
 
-        assertThat(service.create(command).campaignCode()).isEqualTo("C1");
+        assertThat(service.create(command)).satisfies(result -> {
+            assertThat(result.id()).isEqualTo(1L);
+            assertThat(result.campaignCode()).isEqualTo("C1");
+        });
     }
 
     @Test
@@ -142,6 +145,45 @@ class CampaignServiceTest {
         when(mapper.toBo(entity)).thenReturn(command);
 
         assertThat(service.addPrize(1L, command)).isEqualTo(command);
+    }
+
+    @Test
+    void addsAllPrizesInOneBatchAndReturnsGeneratedIds() {
+        var campaign = campaign(1L, CampaignStatus.DRAFT);
+        var first = new PrizeConfigBo(null, null, "P1", "First", PrizeType.PRIZE,
+                new BigDecimal("0.2"), 10, 10, 1, true);
+        var second = new PrizeConfigBo(null, null, "P2", "Second", PrizeType.NO_PRIZE,
+                new BigDecimal("0.8"), 0, 0, 2, true);
+        var firstEntity = mock(LotteryPrize.class);
+        var secondEntity = mock(LotteryPrize.class);
+        var savedBos = List.of(
+                new PrizeConfigBo(101L, 1L, "P1", "First", PrizeType.PRIZE,
+                        new BigDecimal("0.2"), 10, 10, 1, true),
+                new PrizeConfigBo(102L, 1L, "P2", "Second", PrizeType.NO_PRIZE,
+                        new BigDecimal("0.8"), 0, 0, 2, true));
+        when(campaigns.findByIdAndDeletedFalse(1L)).thenReturn(Optional.of(campaign));
+        when(mapper.toEntity(first, 1L)).thenReturn(firstEntity);
+        when(mapper.toEntity(second, 1L)).thenReturn(secondEntity);
+        when(prizes.saveAll(List.of(firstEntity, secondEntity))).thenReturn(List.of(firstEntity, secondEntity));
+        when(mapper.toBo(campaign)).thenReturn(campaignBo(campaign));
+        when(mapper.toPrizeBos(List.of(firstEntity, secondEntity))).thenReturn(savedBos);
+
+        List<PrizeConfigBo> result = service.addPrizes(1L, List.of(first, second));
+
+        assertThat(result).extracting(PrizeConfigBo::id).containsExactly(101L, 102L);
+        verify(prizes, times(1)).saveAll(List.of(firstEntity, secondEntity));
+    }
+
+    @Test
+    void rejectsDuplicatePrizeCodesWithinBatch() {
+        var campaign = campaign(1L, CampaignStatus.DRAFT);
+        var duplicate = new PrizeConfigBo(null, null, "P1", "Prize", PrizeType.PRIZE,
+                new BigDecimal("0.5"), 10, 10, 1, true);
+        when(campaigns.findByIdAndDeletedFalse(1L)).thenReturn(Optional.of(campaign));
+
+        assertThatThrownBy(() -> service.addPrizes(1L, List.of(duplicate, duplicate)))
+                .isInstanceOf(InterviewException.class);
+        verify(prizes, never()).saveAll(any());
     }
 
     @Test

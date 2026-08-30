@@ -17,9 +17,17 @@ public interface CampaignControllerMapper {
     @Mapping(target = "remainingStock", source = "totalStock")
     PrizeConfigBo toBo(PrizeConfigRequest request);
 
+    java.util.List<PrizeConfigBo> toBos(java.util.List<PrizeConfigRequest> requests);
+
     @Mapping(target = "id", source = "id")
     CampaignResponseVo toVo(CampaignBo bo);
 
     @Mapping(target = "id", source = "id")
     PrizeResponseVo toVo(PrizeConfigBo bo);
+
+    java.util.List<PrizeResponseVo> toVos(java.util.List<PrizeConfigBo> bos);
+
+    default String mapId(Long id) {
+        return id == null ? null : id.toString();
+    }
 }

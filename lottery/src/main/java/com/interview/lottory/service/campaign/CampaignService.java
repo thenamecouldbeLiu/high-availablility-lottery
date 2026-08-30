@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.HashSet;
 
 @Service
 @RequiredArgsConstructor
@@ -52,6 +53,18 @@ public class CampaignService {
         LotteryPrize saved = prizeRepository.save(mapper.toEntity(command, campaignId));
         validateIfActive(mapper.toBo(campaign));
         return mapper.toBo(saved);
+    }
+
+    @Transactional
+    public List<PrizeConfigBo> addPrizes(Long campaignId, List<PrizeConfigBo> commands) {
+        LotteryCampaign campaign = getCampaignEntity(campaignId);
+        validateBatch(commands);
+        List<LotteryPrize> entities = commands.stream()
+                .map(command -> mapper.toEntity(command, campaignId))
+                .toList();
+        List<LotteryPrize> saved = prizeRepository.saveAll(entities);
+        validateIfActive(mapper.toBo(campaign));
+        return mapper.toPrizeBos(saved);
     }
 
     @Transactional
@@ -176,6 +189,22 @@ public class CampaignService {
         if (startsAt == null || endsAt == null || !endsAt.isAfter(startsAt)) {
             throw new InterviewException(ErrorCode.INVALID_REQUEST,
                     Constants.MessageKey.INVALID_CAMPAIGN_PERIOD);
+        }
+    }
+
+    private void validateBatch(List<PrizeConfigBo> commands) {
+        if (commands == null || commands.isEmpty()) {
+            throw new InterviewException(ErrorCode.INVALID_REQUEST);
+        }
+        HashSet<String> codes = new HashSet<>();
+        long noPrizeCount = 0;
+        for (PrizeConfigBo command : commands) {
+            if (!codes.add(command.prizeCode())) {
+                throw new InterviewException(ErrorCode.INVALID_REQUEST);
+            }
+            if (command.prizeType() == PrizeType.NO_PRIZE && ++noPrizeCount > 1) {
+                throw new InterviewException(ErrorCode.INVALID_REQUEST);
+            }
         }
     }
 }

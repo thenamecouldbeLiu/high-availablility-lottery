@@ -69,6 +69,20 @@ public class CampaignController {
         return Response.success(mapper.toVo(service.addPrize(campaignId, mapper.toBo(request))));
     }
 
+    @PostMapping("/{campaignId}/prizes/batch")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "批次新增獎項", description = "在同一個 transaction 一次建立全部獎項；response data 中每筆都包含字串 ID。")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "整批建立成功，回傳所有包含 ID 的新獎項"),
+            @ApiResponse(responseCode = "400", description = "清單為空、獎項代碼重複或獎項設定不合法"),
+            @ApiResponse(responseCode = "404", description = "活動不存在")
+    })
+    public Response<java.util.List<PrizeResponseVo>> addPrizes(
+            @Parameter(description = "活動 ID", example = "123456789") @PathVariable Long campaignId,
+            @Valid @RequestBody CreatePrizesRequest request) {
+        return Response.success(mapper.toVos(service.addPrizes(campaignId, mapper.toBos(request.prizes()))));
+    }
+
     @PutMapping("/{campaignId}/prizes/{prizeId}")
     @Operation(summary = "更新獎項", description = "更新獎項內容；庫存不可低於已發出的數量。")
     @ApiResponses({@ApiResponse(responseCode = "200", description = "更新成功"),

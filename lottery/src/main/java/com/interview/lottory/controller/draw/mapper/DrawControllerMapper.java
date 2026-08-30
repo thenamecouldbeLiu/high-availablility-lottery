@@ -27,4 +27,8 @@ public interface DrawControllerMapper {
     AvailableCampaignVo toAvailableVo(CampaignBo bo);
     AvailablePrizeVo toAvailableVo(PrizeConfigBo bo);
     java.util.List<AvailableCampaignVo> toAvailableVos(java.util.List<CampaignBo> bos);
+
+    default String mapId(Long id) {
+        return id == null ? null : id.toString();
+    }
 }

@@ -24,7 +24,7 @@ class CampaignIdMappingTest {
 
         var response = controllerMapper.toVo(entityMapper.toBo(entity));
 
-        assertThat(response.id()).isNotNull().isEqualTo(entity.getId());
+        assertThat(response.id()).isNotNull().isEqualTo(entity.getId().toString());
     }
 
     @Test
@@ -40,6 +40,6 @@ class CampaignIdMappingTest {
 
         var response = controllerMapper.toVo(entityMapper.toBo(entity));
 
-        assertThat(response.id()).isNotNull().isEqualTo(entity.getId());
+        assertThat(response.id()).isNotNull().isEqualTo(entity.getId().toString());
     }
 }

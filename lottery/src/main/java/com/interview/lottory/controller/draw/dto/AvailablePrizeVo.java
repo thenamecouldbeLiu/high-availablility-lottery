@@ -4,7 +4,7 @@ import com.interview.lottory.enums.PrizeType;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record AvailablePrizeVo(
-        @Schema(example = "987654321") Long id,
+        @Schema(example = "987654321", type = "string") String id,
         @Schema(example = "ANNIVERSARY_IPHONE") String prizeCode,
         @Schema(example = "iPhone") String name,
         @Schema(example = "PRIZE") PrizeType prizeType,
