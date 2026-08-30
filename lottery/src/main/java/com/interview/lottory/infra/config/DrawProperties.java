@@ -14,6 +14,7 @@ public record DrawProperties(
         @Min(1) long probabilityScale,
         @NotNull Duration idempotencyTtl,
         @NotNull Duration resultTtl,
+        @NotNull Duration stockReservationTtl,
         @NotNull Duration sseTimeout,
         @NotNull Duration ssePollInterval
 ) {

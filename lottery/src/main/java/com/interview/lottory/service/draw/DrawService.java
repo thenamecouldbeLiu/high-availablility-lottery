@@ -26,8 +26,12 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -46,6 +50,7 @@ public class DrawService {
     private final TransactionTemplate transactionTemplate;
     private final JsonUtil jsonUtil;
     private final DrawProperties properties;
+    private final PrizeStockReservationService stockReservationService;
 
     public DrawAcceptedBo submit(DrawCommandBo command) {
         validateCommand(command);
@@ -105,15 +110,47 @@ public class DrawService {
         DrawPrizeBo noPrize = prizes.stream().filter(p -> p.prizeType() == PrizeType.NO_PRIZE)
                 .findFirst().orElseThrow(() -> new InterviewException(ErrorCode.INVALID_PRIZE_CONFIGURATION));
 
-        List<DrawItemBo> items = new ArrayList<>(command.drawCount());
+        List<DrawCandidate> candidates = new ArrayList<>(command.drawCount());
         for (int sequence = 1; sequence <= command.drawCount(); sequence++) {
-            DrawPrizeBo selected = selectPrize(prizes);
-            boolean won = selected.prizeType() == PrizeType.PRIZE
-                    && prizeRepository.deductStockIfAvailable(selected.id(), 1) == 1;
-            DrawPrizeBo actual = won ? selected : noPrize;
-            items.add(new DrawItemBo(sequence, won ? actual.id() : null,
-                    actual.prizeCode(), actual.name(), won));
+            candidates.add(new DrawCandidate(sequence, selectPrize(prizes)));
         }
+
+        Map<Long, List<DrawCandidate>> candidatesByPrize = new LinkedHashMap<>();
+        candidates.stream()
+                .filter(candidate -> candidate.selected().prizeType() == PrizeType.PRIZE)
+                .forEach(candidate -> candidatesByPrize
+                        .computeIfAbsent(candidate.selected().id(), ignored -> new ArrayList<>())
+                        .add(candidate));
+        Map<Long, Long> requested = new LinkedHashMap<>();
+        Map<Long, Long> databaseStock = new LinkedHashMap<>();
+        candidatesByPrize.forEach((prizeId, values) -> {
+            requested.put(prizeId, (long) values.size());
+            databaseStock.put(prizeId, values.getFirst().selected().remainingStock());
+        });
+
+        Map<Long, Long> reserved = stockReservationService.reserve(
+                command.campaignId(), eventId, requested, databaseStock);
+        Set<Integer> winningSequences = new HashSet<>();
+        candidatesByPrize.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .forEach(entry -> {
+                    long quantity = reserved.getOrDefault(entry.getKey(), 0L);
+                    if (quantity > 0
+                            && prizeRepository.deductStockIfAvailable(entry.getKey(), quantity) != 1) {
+                        throw new InterviewException(ErrorCode.DATABASE_OPERATION_FAILED);
+                    }
+                    entry.getValue().stream().limit(quantity)
+                            .map(DrawCandidate::sequence)
+                            .forEach(winningSequences::add);
+                });
+
+        List<DrawItemBo> items = candidates.stream().map(candidate -> {
+            boolean won = candidate.selected().prizeType() == PrizeType.PRIZE
+                    && winningSequences.contains(candidate.sequence());
+            DrawPrizeBo actual = won ? candidate.selected() : noPrize;
+            return new DrawItemBo(candidate.sequence(), won ? actual.id() : null,
+                    actual.prizeCode(), actual.name(), won);
+        }).toList();
 
         DrawResultBo result = new DrawResultBo(eventId, command.requestId(), command.campaignId(),
                 command.userId(), command.drawCount(), List.copyOf(items));
@@ -191,6 +228,9 @@ public class DrawService {
                 || now.isBefore(campaign.startsAt()) || !now.isBefore(campaign.endsAt())) {
             throw new InterviewException(ErrorCode.CAMPAIGN_NOT_ACTIVE);
         }
+    }
+
+    private record DrawCandidate(int sequence, DrawPrizeBo selected) {
     }
 
 }

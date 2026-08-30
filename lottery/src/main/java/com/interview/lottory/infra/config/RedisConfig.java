@@ -34,4 +34,33 @@ public class RedisConfig {
         script.setResultType(Long.class);
         return script;
     }
+
+    @Bean
+    RedisScript<java.util.List<Long>> reservePrizeStockScript() {
+        DefaultRedisScript<java.util.List<Long>> script = new DefaultRedisScript<>();
+        script.setLocation(new ClassPathResource("redis/reserve-prize-stock.lua"));
+        script.setResultType(longListType());
+        return script;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Class<java.util.List<Long>> longListType() {
+        return (Class<java.util.List<Long>>) (Class<?>) java.util.List.class;
+    }
+
+    @Bean
+    RedisScript<Long> confirmPrizeStockScript() {
+        DefaultRedisScript<Long> script = new DefaultRedisScript<>();
+        script.setLocation(new ClassPathResource("redis/confirm-prize-stock.lua"));
+        script.setResultType(Long.class);
+        return script;
+    }
+
+    @Bean
+    RedisScript<Long> releasePrizeStockScript() {
+        DefaultRedisScript<Long> script = new DefaultRedisScript<>();
+        script.setLocation(new ClassPathResource("redis/release-prize-stock.lua"));
+        script.setResultType(Long.class);
+        return script;
+    }
 }

@@ -120,6 +120,7 @@ app:
       probability-scale: ${DRAW_PROBABILITY_SCALE:10000000}
       idempotency-ttl: "${DRAW_IDEMPOTENCY_TTL:24h}"
       result-ttl: "${DRAW_RESULT_TTL:24h}"
+      stock-reservation-ttl: "${DRAW_STOCK_RESERVATION_TTL:10m}"
       sse-timeout: "${DRAW_SSE_TIMEOUT:5m}"
       sse-poll-interval: "${DRAW_SSE_POLL_INTERVAL:500ms}"
   messaging:

@@ -33,6 +33,7 @@ class DrawSseServiceTest {
     @BeforeEach
     void setUp() {
         var properties = new DrawProperties(10, 10_000_000, Duration.ofHours(1), Duration.ofHours(1),
+                Duration.ofMinutes(10),
                 Duration.ofMinutes(5), Duration.ofSeconds(1));
         service = new DrawSseService(queries, mapper, properties, scheduler);
     }

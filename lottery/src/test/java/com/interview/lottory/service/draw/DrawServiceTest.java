@@ -27,6 +27,7 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -50,14 +51,16 @@ class DrawServiceTest {
     @Mock JsonUtil json;
     @Mock ValueOperations<String, String> stringValues;
     @Mock ValueOperations<String, Object> objectValues;
+    @Mock PrizeStockReservationService stockReservations;
     DrawService service;
 
     @BeforeEach
     void setUp() {
         var properties = new DrawProperties(10, 10_000_000, Duration.ofHours(1), Duration.ofHours(1),
+                Duration.ofMinutes(10),
                 Duration.ofMinutes(5), Duration.ofSeconds(1));
         service = new DrawService(campaigns, prizes, quotas, events, draws, mapper, redis, stringRedis,
-                releaseScript, transactions, json, properties);
+                releaseScript, transactions, json, properties, stockReservations);
     }
 
     @Test
@@ -119,7 +122,8 @@ class DrawServiceTest {
         when(mapper.toCampaignBo(campaign)).thenReturn(activeCampaign());
         when(quotas.consumeIfAvailable(1L, "user", 1, 5)).thenReturn(1);
         when(mapper.toPrizeBos(any())).thenReturn(List.of(selected, noPrize));
-        when(prizes.deductStockIfAvailable(10L, 1)).thenReturn(0);
+        when(stockReservations.reserve(eq(1L), eq(eventId), anyMap(), anyMap()))
+                .thenReturn(Map.of(10L, 0L));
         when(json.writeJson(any(DrawResultBo.class))).thenReturn("result");
 
         DrawResultBo result = service.process(eventId);
@@ -132,6 +136,31 @@ class DrawServiceTest {
         verify(draws).saveAll(anyList());
         verify(mapper).attachResult(event, "result");
         verify(events).save(event);
+    }
+
+    @Test
+    void aggregatesWinningStockIntoOneDeductionPerPrize() {
+        UUID eventId = UUID.randomUUID();
+        var event = new LotteryEvent(); event.setPayload("{}");
+        var command = new DrawCommandBo("request-1", 1L, "user", 3);
+        var selected = new DrawPrizeBo(10L, "WIN", "Winner", PrizeType.PRIZE, BigDecimal.ONE, 10);
+        var noPrize = new DrawPrizeBo(20L, "LOSE", "No prize", PrizeType.NO_PRIZE, BigDecimal.ZERO, 0);
+        when(events.claimForProcessing(eventId)).thenReturn(1);
+        when(events.findById(eventId)).thenReturn(Optional.of(event));
+        when(json.readJson("{}", DrawCommandBo.class)).thenReturn(command);
+        when(campaigns.findByIdAndDeletedFalse(1L)).thenReturn(Optional.of(new LotteryCampaign()));
+        when(mapper.toCampaignBo(any())).thenReturn(activeCampaign());
+        when(quotas.consumeIfAvailable(1L, "user", 3, 5)).thenReturn(1);
+        when(mapper.toPrizeBos(any())).thenReturn(List.of(selected, noPrize));
+        when(stockReservations.reserve(1L, eventId, Map.of(10L, 3L), Map.of(10L, 10L)))
+                .thenReturn(Map.of(10L, 3L));
+        when(prizes.deductStockIfAvailable(10L, 3)).thenReturn(1);
+        when(json.writeJson(any(DrawResultBo.class))).thenReturn("result");
+
+        DrawResultBo result = service.process(eventId);
+
+        assertThat(result.results()).hasSize(3).allMatch(DrawItemBo::won);
+        verify(prizes, times(1)).deductStockIfAvailable(10L, 3);
     }
 
     @Test

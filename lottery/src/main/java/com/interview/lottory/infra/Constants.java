@@ -10,6 +10,8 @@ public final class Constants {
     public static final class RedisKey {
         public static final String IDEMPOTENCY_PREFIX = "lottery:idempotency:";
         public static final String RESULT_PREFIX = "lottery:result:";
+        public static final String STOCK_PREFIX = "lottery:stock:";
+        public static final String STOCK_RESERVATION_PREFIX = "lottery:stock-reservation:";
 
         private RedisKey() {
         }
