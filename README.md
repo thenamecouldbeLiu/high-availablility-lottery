@@ -87,3 +87,63 @@ To initialize the campaigns:
 
 The campaign codes are unique. Running the create requests again against the same database returns a duplicate-request
 error; delete the existing campaigns or change the campaign codes before rerunning them.
+
+6. Reset and reinitialize the Docker environment
+
+> **Warning:** The following commands permanently delete the local PostgreSQL, Redis, and RabbitMQ Docker volume data.
+> This removes application data, Keycloak users/configuration, cached data, queues, campaigns, prizes, and draw history.
+
+First stop the locally running user and lottery application processes. From the project root, run:
+
+```bash
+docker compose -f init-service/docker-compose.yml down --volumes --remove-orphans
+docker compose -f init-service/docker-compose.yml up -d --force-recreate
+```
+
+The first command removes the containers and the three named volumes declared by this project:
+
+- `postgres-data`: application data and the Keycloak database.
+- `redis-data`: cache and idempotency data.
+- `rabbitmq-data`: queues and messages.
+
+The second command recreates PostgreSQL, Redis, RabbitMQ, and Keycloak. On a clean PostgreSQL volume,
+`init-service/postgres/init-keycloak.sql` recreates the Keycloak database, and Keycloak imports
+`init-service/keycloak-export/lottery-realm.json`.
+
+Wait until all containers are ready:
+
+```bash
+docker compose -f init-service/docker-compose.yml ps
+docker compose -f init-service/docker-compose.yml logs -f postgres keycloak
+```
+
+After PostgreSQL and Keycloak are healthy, press `Ctrl+C` to leave the log view and start the application services:
+
+```bash
+./dev.sh
+```
+
+Liquibase recreates the application schema when the user and lottery services start. To restore the two example
+campaigns, execute `init-service/campaign-requests.http` from top to bottom after obtaining a new admin access token.
+Tokens issued before the reset are invalid because the Keycloak realm was recreated.
+
+7. Unit tests and JaCoCo coverage report
+
+Run the lottery service unit tests from the project root:
+
+```bash
+./gradlew :lottery:test
+```
+
+The test task automatically generates JaCoCo reports after the tests finish:
+
+- HTML: `lottery/build/reports/jacoco/test/html/index.html`
+- XML: `lottery/build/reports/jacoco/test/jacocoTestReport.xml`
+
+To generate only the report explicitly (the task also runs the required tests):
+
+```bash
+./gradlew :lottery:jacocoTestReport
+```
+
+The service unit tests use mocks and do not require Docker, PostgreSQL, Redis, or RabbitMQ.
